@@ -21,19 +21,15 @@ public class LogMessage {
 		return component;
 	}
 
-
 	public String getMsg() {
 		return msg;
 	}
-
 
 	public Date getDate() {
 		return date;
 	}
 
-
 	public LogPriority getPriority() {
 		return priority;
 	}
-
 }
