@@ -1,4 +1,4 @@
-package tradewar.log;
+package tradewar.utils.log;
 
 import java.util.Date;
 

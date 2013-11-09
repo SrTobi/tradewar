@@ -1,4 +1,4 @@
-package tradewar.log;
+package tradewar.utils.log;
 
 public class Log {
 	
