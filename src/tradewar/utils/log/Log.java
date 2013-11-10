@@ -43,6 +43,15 @@ public class Log {
 		stream.write(new LogMessage(msg, component, LogPriority.DEBUG));
 	}
 	
+	public void excp(Throwable e) {
+
+		stream.write(new LogMessage("Exception in thread \"" + Thread.currentThread().getName() + "\" " + e, component, LogPriority.EXCP));
+		
+		for(StackTraceElement ste : e.getStackTrace()) {
+			stream.write(new LogMessage("	at " + ste.toString(), component, LogPriority.EXCP));
+		}
+	}
+	
 	public ILogStream getStream() {
 		return stream;
 	}

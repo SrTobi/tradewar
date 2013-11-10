@@ -2,7 +2,8 @@ package tradewar.utils.log;
 
 
 public enum LogPriority {
-	WTF(0, "WTF"),
+	WTF(0, "WTF "),
+	EXCP(0, "EXCP"),
 	CRIT(0, "CRIT"),
 	ERROR(1, "ERR "),
 	WARN(2, "WARN"), 

@@ -1,5 +1,7 @@
 package tradewar.utils.log;
 
+import java.io.PrintStream;
+
 
 
 public interface ILogStream {
@@ -12,7 +14,18 @@ public interface ILogStream {
 
 		@Override
 		public void write(LogMessage msg) {
-			System.out.format("[%tT][%15s]%s: %s%n", msg.getDate(), msg.getComponent(), msg.getPriority().getName(), msg.getMsg());
+			
+			getPrintStream(msg.getPriority())
+				.format("[%tT][%15s]%s: %s%n", msg.getDate(), msg.getComponent(), msg.getPriority().getName(), msg.getMsg());
+		}
+		
+		private PrintStream getPrintStream(LogPriority priority) {
+
+			if(priority.isMoreImportantThen(LogPriority.ERROR)) {
+				return System.err;
+			}
+
+			return System.out;
 		}
 		
 	}
