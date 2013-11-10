@@ -1,14 +1,27 @@
 package tradewar.app.gui;
 
 import java.awt.Component;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.table.DefaultTableModel;
 
+import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
 import tradewar.api.IScene;
 import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
-import net.miginfocom.swing.MigLayout;
 
 public class LauncherScene extends JPanel implements IScene {
 
@@ -16,12 +29,21 @@ public class LauncherScene extends JPanel implements IScene {
 
 	private Log log;
 	private IApp app;
+	private JTable gameOverview;
+	private JLabel lblTradewar;
+	private JFormattedTextField nicknameInput;
+	private JLabel lblNickname;
+	private JLabel lblInfoLabel;
+	private JPanel panel;
+	private JButton btnServer;
+	private JButton btnHelp;
 	
 	
 	/**
 	 * Create the panel.
 	 */
 	public LauncherScene(ILogStream logStream, IApp app) {
+		setBorder(new EmptyBorder(10, 10, 10, 10));
 
 		this.log = new Log(logStream, "launcher-scene");
 		this.app = app;
@@ -31,7 +53,79 @@ public class LauncherScene extends JPanel implements IScene {
 	
 	private void setup() {
 
-		setLayout(new MigLayout("", "[grow]", "[grow]"));
+		setLayout(new MigLayout("", "[][][][grow,fill][]", "[][][grow][][][][]"));
+		
+		lblTradewar = new JLabel("TradeWar");
+		lblTradewar.setFont(new Font("Tahoma", Font.BOLD, 40));
+		lblTradewar.setHorizontalAlignment(SwingConstants.CENTER);
+		add(lblTradewar, "flowx,cell 0 0 5 1,growx");
+		
+		lblNickname = new JLabel("Nickname:");
+		add(lblNickname, "cell 0 1,alignx trailing");
+		
+		nicknameInput = new JFormattedTextField();
+		add(nicknameInput, "cell 1 1 3 1,growx");
+		
+		JScrollPane scrollPane = new JScrollPane();
+		add(scrollPane, "cell 0 2 4 4,grow");
+		
+		gameOverview = new JTable();
+		scrollPane.setViewportView(gameOverview);
+		gameOverview.setFillsViewportHeight(true);
+		gameOverview.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		gameOverview.setModel(new DefaultTableModel(
+			new Object[][] {
+			},
+			new String[] {
+				"Server", "Mod", "Passwort", "Spieler", "Ip"
+			}
+		) {
+			Class<?>[] columnTypes = new Class[] {
+				String.class, String.class, Boolean.class, Object.class, String.class
+			};
+			public Class<?> getColumnClass(int columnIndex) {
+				return columnTypes[columnIndex];
+			}
+		});
+		
+		JButton btnQuitButton = new JButton("Quit");
+		add(btnQuitButton, "cell 4 3,growx");
+		
+		JButton btnRefreshButton = new JButton("Refresh");
+		add(btnRefreshButton, "cell 4 4,growx");
+		
+		JButton btnDirectConnectButton = new JButton("Direct Connect");
+		add(btnDirectConnectButton, "cell 4 5,growx");
+		
+		btnServer = new JButton("Server");
+		add(btnServer, "cell 0 6 2 1");
+		
+		btnHelp = new JButton("Help");
+		add(btnHelp, "cell 2 6");
+		
+		panel = new JPanel();
+		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		add(panel, "cell 3 6,grow");
+		
+		lblInfoLabel = new JLabel("Tobias");
+		panel.add(lblInfoLabel);
+		lblInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		
+		JButton btnConnectButton = new JButton("Connect");
+		add(btnConnectButton, "cell 4 6,growx");
+		gameOverview.getColumnModel().getColumn(0).setPreferredWidth(100);
+		gameOverview.getColumnModel().getColumn(0).setMinWidth(50);
+		gameOverview.getColumnModel().getColumn(1).setPreferredWidth(100);
+		gameOverview.getColumnModel().getColumn(1).setMinWidth(50);
+		gameOverview.getColumnModel().getColumn(2).setPreferredWidth(60);
+		gameOverview.getColumnModel().getColumn(2).setMinWidth(60);
+		gameOverview.getColumnModel().getColumn(2).setMaxWidth(80);
+		gameOverview.getColumnModel().getColumn(3).setPreferredWidth(60);
+		gameOverview.getColumnModel().getColumn(3).setMinWidth(45);
+		gameOverview.getColumnModel().getColumn(3).setMaxWidth(60);
+		gameOverview.getColumnModel().getColumn(4).setPreferredWidth(100);
+		gameOverview.getColumnModel().getColumn(4).setMinWidth(90);
+		gameOverview.getColumnModel().getColumn(4).setMaxWidth(135);
 		
 	}
 	
@@ -60,4 +154,12 @@ public class LauncherScene extends JPanel implements IScene {
 	@Override
 	public void onLeave() {}
 
+	private class SwingAction extends AbstractAction {
+		public SwingAction() {
+			putValue(NAME, "SwingAction");
+			putValue(SHORT_DESCRIPTION, "Some short description");
+		}
+		public void actionPerformed(ActionEvent e) {
+		}
+	}
 }
