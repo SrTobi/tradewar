@@ -23,30 +23,39 @@ import tradewar.api.IScene;
 import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
 import javax.swing.Action;
+import java.awt.event.ActionListener;
+import javax.swing.border.TitledBorder;
+import javax.swing.JCheckBox;
+import javax.swing.JTextField;
+import javax.swing.BoxLayout;
 
 public class LauncherScene extends JPanel implements IScene {
 
 	private static final long serialVersionUID = 4078132421255645474L;
-
+	
 	private Log log;
 	private IApp app;
+	
+	private short standardQueryServerPort;
+	
 	private JTable gameOverview;
-	private JLabel lblTradewar;
 	private JFormattedTextField nicknameInput;
-	private JLabel lblNickname;
 	private JLabel lblInfoLabel;
 	private JPanel panel;
+	private JTextField specificQueryServerPortInput;
+	private JScrollPane gameOverviewScrollPane;
+	private JCheckBox specificQueryServerPortCheckBox;
+
 	private final Action quitAction = new QuitAction();
-	
+	private final Action enableQueryServerPortInputAction = new EnableQueryServerPortInputAction();
 	
 	/**
 	 * Create the panel.
 	 */
-	public LauncherScene(ILogStream logStream, IApp app) {
-		setBorder(new EmptyBorder(4, 10, 10, 10));
-
+	public LauncherScene(ILogStream logStream, IApp app, short standardQueryServerPort) {
 		this.log = new Log(logStream, "launcher-scene");
 		this.app = app;
+		this.standardQueryServerPort = standardQueryServerPort;
 		
 		setup();
 	}
@@ -54,24 +63,39 @@ public class LauncherScene extends JPanel implements IScene {
 	private void setup() {
 
 		log.debug("setup launcher scene...");
-		setLayout(new MigLayout("", "[][][][grow,fill][]", "[][][grow][][][][]"));
+		setBorder(new EmptyBorder(4, 10, 10, 10));
+		setLayout(new MigLayout("", "[][shrink 95][][grow,fill][]", "[][][][grow][][][][]"));
 		
-		lblTradewar = new JLabel("TradeWar");
+		JLabel lblTradewar = new JLabel("TradeWar");
 		lblTradewar.setFont(new Font("Tahoma", Font.BOLD, 40));
 		lblTradewar.setHorizontalAlignment(SwingConstants.CENTER);
 		add(lblTradewar, "flowx,cell 0 0 5 1,growx");
 		
-		lblNickname = new JLabel("Nickname:");
+		JLabel lblNickname = new JLabel("Nickname:");
 		add(lblNickname, "cell 0 1,alignx trailing");
 		
 		nicknameInput = new JFormattedTextField();
 		add(nicknameInput, "cell 1 1 3 1,growx");
 		
-		JScrollPane scrollPane = new JScrollPane();
-		add(scrollPane, "cell 0 2 4 4,grow");
+		JPanel specificPortGroup = new JPanel();
+		specificPortGroup.setBorder(new TitledBorder(null, "Port", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		add(specificPortGroup, "cell 4 2,grow");
+		specificPortGroup.setLayout(new BoxLayout(specificPortGroup, BoxLayout.X_AXIS));
+		
+		specificQueryServerPortCheckBox = new JCheckBox("");
+		specificQueryServerPortCheckBox.setAction(enableQueryServerPortInputAction);
+		specificPortGroup.add(specificQueryServerPortCheckBox);
+		
+		specificQueryServerPortInput = new JTextField();
+		specificQueryServerPortInput.setEnabled(false);
+		resetStandardQueryPortInputField();
+		specificPortGroup.add(specificQueryServerPortInput);
+		
+		gameOverviewScrollPane = new JScrollPane();
+		add(gameOverviewScrollPane, "cell 0 2 4 5,grow");
 		
 		gameOverview = new JTable();
-		scrollPane.setViewportView(gameOverview);
+		gameOverviewScrollPane.setViewportView(gameOverview);
 		gameOverview.setFillsViewportHeight(true);
 		gameOverview.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		gameOverview.setModel(new DefaultTableModel(
@@ -89,32 +113,39 @@ public class LauncherScene extends JPanel implements IScene {
 			}
 		});
 		
-		JButton btnQuitButton = new JButton("Quit");
-		btnQuitButton.setAction(quitAction);
-		add(btnQuitButton, "cell 4 3,growx");
+		JButton btnCreateServerButton = new JButton("Server");
+		add(btnCreateServerButton, "cell 4 4,growx");
 		
 		JButton btnRefreshButton = new JButton("Refresh");
-		add(btnRefreshButton, "cell 4 4,growx");
+		add(btnRefreshButton, "cell 4 5,growx");
 		
 		JButton btnDirectConnectButton = new JButton("Direct Connect");
-		add(btnDirectConnectButton, "cell 4 5,growx");
+		add(btnDirectConnectButton, "cell 4 6,growx");
 		
-		JButton btnCreateServerButton = new JButton("Server");
-		add(btnCreateServerButton, "cell 0 6 2 1");
+		JButton btnQuitButton = new JButton("Quit");
+		btnQuitButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
+		btnQuitButton.setAction(quitAction);
+		add(btnQuitButton, "cell 0 7");
 		
-		JButton btnOpenHelp = new JButton("Help");
-		add(btnOpenHelp, "cell 2 6");
+		JButton btnOpenHelpButton = new JButton("Help");
+		add(btnOpenHelpButton, "cell 1 7");
+		
+		JButton btnConfigButton = new JButton("Config");
+		add(btnConfigButton, "cell 2 7");
 		
 		panel = new JPanel();
 		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		add(panel, "cell 3 6,grow");
+		add(panel, "cell 3 7,grow");
 		
 		lblInfoLabel = new JLabel("Tobias");
 		panel.add(lblInfoLabel);
 		lblInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		JButton btnConnectButton = new JButton("Connect");
-		add(btnConnectButton, "cell 4 6,growx");
+		add(btnConnectButton, "cell 4 7,growx");
 		gameOverview.getColumnModel().getColumn(0).setPreferredWidth(100);
 		gameOverview.getColumnModel().getColumn(0).setMinWidth(50);
 		gameOverview.getColumnModel().getColumn(1).setPreferredWidth(100);
@@ -155,6 +186,11 @@ public class LauncherScene extends JPanel implements IScene {
 	public void onEnter() {}
 	@Override
 	public void onLeave() {}
+	
+	private void resetStandardQueryPortInputField() {
+
+		specificQueryServerPortInput.setText("" + standardQueryServerPort);
+	}
 
 	private class QuitAction extends AbstractAction {
 		public QuitAction() {
@@ -165,6 +201,23 @@ public class LauncherScene extends JPanel implements IScene {
 			
 			log.debug("Quit pressed!");			
 			app.getMainSceneFrame().removeScene(LauncherScene.this);
+		}
+	}
+	
+	
+	private class EnableQueryServerPortInputAction extends AbstractAction {
+		public EnableQueryServerPortInputAction() {
+			putValue(NAME, "");
+			putValue(SHORT_DESCRIPTION, "Enables the port for the server hook!");
+		}
+		public void actionPerformed(ActionEvent e) {
+			boolean enableSpecPort = specificQueryServerPortCheckBox.isSelected();
+			
+			if(!enableSpecPort) {
+				resetStandardQueryPortInputField();
+			}
+			
+			specificQueryServerPortInput.setEnabled(enableSpecPort);
 		}
 	}
 }

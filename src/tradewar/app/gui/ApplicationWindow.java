@@ -1,6 +1,7 @@
 package tradewar.app.gui;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -33,6 +34,8 @@ public class ApplicationWindow extends JFrame implements ISceneFrame {
 
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 680, 410);
+		setMinimumSize(new Dimension(500, 300));
+		setTitle("TradeWar");
 		setLocationRelativeTo(null);
 	}
 
