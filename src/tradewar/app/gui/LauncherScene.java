@@ -22,6 +22,7 @@ import tradewar.api.IApp;
 import tradewar.api.IScene;
 import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
+import javax.swing.Action;
 
 public class LauncherScene extends JPanel implements IScene {
 
@@ -35,15 +36,14 @@ public class LauncherScene extends JPanel implements IScene {
 	private JLabel lblNickname;
 	private JLabel lblInfoLabel;
 	private JPanel panel;
-	private JButton btnServer;
-	private JButton btnHelp;
+	private final Action quitAction = new QuitAction();
 	
 	
 	/**
 	 * Create the panel.
 	 */
 	public LauncherScene(ILogStream logStream, IApp app) {
-		setBorder(new EmptyBorder(10, 10, 10, 10));
+		setBorder(new EmptyBorder(4, 10, 10, 10));
 
 		this.log = new Log(logStream, "launcher-scene");
 		this.app = app;
@@ -53,6 +53,7 @@ public class LauncherScene extends JPanel implements IScene {
 	
 	private void setup() {
 
+		log.debug("setup launcher scene...");
 		setLayout(new MigLayout("", "[][][][grow,fill][]", "[][][grow][][][][]"));
 		
 		lblTradewar = new JLabel("TradeWar");
@@ -89,6 +90,7 @@ public class LauncherScene extends JPanel implements IScene {
 		});
 		
 		JButton btnQuitButton = new JButton("Quit");
+		btnQuitButton.setAction(quitAction);
 		add(btnQuitButton, "cell 4 3,growx");
 		
 		JButton btnRefreshButton = new JButton("Refresh");
@@ -97,11 +99,11 @@ public class LauncherScene extends JPanel implements IScene {
 		JButton btnDirectConnectButton = new JButton("Direct Connect");
 		add(btnDirectConnectButton, "cell 4 5,growx");
 		
-		btnServer = new JButton("Server");
-		add(btnServer, "cell 0 6 2 1");
+		JButton btnCreateServerButton = new JButton("Server");
+		add(btnCreateServerButton, "cell 0 6 2 1");
 		
-		btnHelp = new JButton("Help");
-		add(btnHelp, "cell 2 6");
+		JButton btnOpenHelp = new JButton("Help");
+		add(btnOpenHelp, "cell 2 6");
 		
 		panel = new JPanel();
 		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -154,12 +156,15 @@ public class LauncherScene extends JPanel implements IScene {
 	@Override
 	public void onLeave() {}
 
-	private class SwingAction extends AbstractAction {
-		public SwingAction() {
-			putValue(NAME, "SwingAction");
-			putValue(SHORT_DESCRIPTION, "Some short description");
+	private class QuitAction extends AbstractAction {
+		public QuitAction() {
+			putValue(NAME, "Quit");
+			putValue(SHORT_DESCRIPTION, "Quit the application");
 		}
 		public void actionPerformed(ActionEvent e) {
+			
+			log.debug("Quit pressed!");			
+			app.getMainSceneFrame().removeScene(LauncherScene.this);
 		}
 	}
 }

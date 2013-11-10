@@ -31,8 +31,9 @@ public class ApplicationWindow extends JFrame implements ISceneFrame {
 	
 	private void setup() {
 
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 672, 503);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setBounds(100, 100, 680, 410);
+		setLocationRelativeTo(null);
 	}
 
 
@@ -86,6 +87,12 @@ public class ApplicationWindow extends JFrame implements ISceneFrame {
 	
 
 	private void refreshTopMost() {
+
+		if(sceneStack.isEmpty()) {
+			dispose();
+			return;
+		}
+		
 		IScene scene = sceneStack.getLast();
 		
 		scene.onEnter();

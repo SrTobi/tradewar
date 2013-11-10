@@ -4,3 +4,4 @@
 *.war
 *.ear
 /bin
+.settings/org.eclipse.jdt.core.prefs
