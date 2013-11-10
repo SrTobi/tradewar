@@ -3,6 +3,9 @@ package tradewar.app;
 
 import java.awt.EventQueue;
 
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
 import tradewar.api.IApp;
 import tradewar.api.ISceneFrame;
 import tradewar.app.gui.ApplicationWindow;
@@ -24,6 +27,16 @@ public class Application implements IApp, Runnable {
 
 		log.info("Start application...");
 		
+        try {
+        	log.debug("Setup look and feel...");
+			UIManager.setLookAndFeel(
+			    UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			log.err("Failed to set look and feel!");
+			log.excp(e);
+		}
+		
 		mainWin = new ApplicationWindow(log.getStream(), "MainWindow");
 		mainWin.setScene(new LauncherScene(log.getStream(), this));
 		
@@ -36,21 +49,10 @@ public class Application implements IApp, Runnable {
 		log.info("Application closed!");
 	}
 
-
-
 	@Override
 	public ISceneFrame getMainSceneFrame() {
 		return mainWin;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}	
 	
 	private Thread getShutdownHook() {
 		
