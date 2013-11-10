@@ -4,28 +4,30 @@ package tradewar.app;
 import java.awt.EventQueue;
 
 import tradewar.api.IApp;
+import tradewar.api.ISceneFrame;
 import tradewar.app.gui.ApplicationWindow;
-import tradewar.app.gui.TestScene;
-import tradewar.log.ILogStream;
-import tradewar.log.Log;
+import tradewar.app.gui.LauncherScene;
+import tradewar.utils.log.ILogStream;
+import tradewar.utils.log.Log;
 
 public class Application implements IApp, Runnable {
 
 	private Log log = new Log(ILogStream.sys, "app");
-	ApplicationWindow appWin;
+	ApplicationWindow mainWin;
 	
 	public Application(String[] args) {
 
 	}
 
+	@Override
 	public void run() {
 
 		log.info("Start application...");
 		
-		appWin = new ApplicationWindow(log.getStream(), "MainWindow");
-		appWin.setScene(new TestScene(appWin));
+		mainWin = new ApplicationWindow(log.getStream(), "MainWindow");
+		mainWin.setScene(new LauncherScene(log.getStream(), this));
 		
-		appWin.setVisible(true);
+		mainWin.setVisible(true);
 	}
 	
 
@@ -34,6 +36,22 @@ public class Application implements IApp, Runnable {
 		log.info("Application closed!");
 	}
 
+
+
+	@Override
+	public ISceneFrame getMainSceneFrame() {
+		return mainWin;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	private Thread getShutdownHook() {
 		
 		return new Thread() {
@@ -43,7 +61,7 @@ public class Application implements IApp, Runnable {
 			}
 		};
 	}
-	
+
 	public static void main(String[] args) {
 		
 		Application app = new Application(args);
@@ -51,5 +69,4 @@ public class Application implements IApp, Runnable {
 		
 		Runtime.getRuntime().addShutdownHook(app.getShutdownHook());
 	}
-
 }

@@ -8,8 +8,8 @@ import javax.swing.JFrame;
 
 import tradewar.api.IScene;
 import tradewar.api.ISceneFrame;
-import tradewar.log.ILogStream;
-import tradewar.log.Log;
+import tradewar.utils.log.ILogStream;
+import tradewar.utils.log.Log;
 
 public class ApplicationWindow extends JFrame implements ISceneFrame {
 
