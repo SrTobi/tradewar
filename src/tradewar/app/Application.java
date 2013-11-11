@@ -15,8 +15,8 @@ import tradewar.utils.log.Log;
 
 public class Application implements IApp, Runnable {
 
-	private static short STANDARD_GAMESERVER_PORT = 23451;
-	private static short STANDARD_QUERYSERVER_PORT = 23452;
+	private static int STANDARD_GAMESERVER_PORT = 23451;
+	private static int STANDARD_QUERYSERVER_PORT = 23452;
 	
 	private Log log = new Log(ILogStream.sys, "app");
 	ApplicationWindow mainWin;
@@ -40,7 +40,7 @@ public class Application implements IApp, Runnable {
 		}
 		
 		mainWin = new ApplicationWindow(log.getStream(), "MainWindow");
-		mainWin.setScene(new LauncherScene(log.getStream(), this, STANDARD_QUERYSERVER_PORT));
+		mainWin.setScene(new LauncherScene(log.getStream(), this, STANDARD_GAMESERVER_PORT, STANDARD_QUERYSERVER_PORT));
 		
 		mainWin.setVisible(true);
 	}

@@ -22,8 +22,13 @@ import tradewar.api.IApp;
 import tradewar.api.IScene;
 import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
+
 import javax.swing.Action;
+
 import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.Vector;
+
 import javax.swing.border.TitledBorder;
 import javax.swing.JCheckBox;
 import javax.swing.JTextField;
@@ -36,7 +41,8 @@ public class LauncherScene extends JPanel implements IScene {
 	private Log log;
 	private IApp app;
 	
-	private short standardQueryServerPort;
+	private int standardQueryServerPort;
+	private int standardGameServerPort;
 	
 	private JTable gameOverview;
 	private JFormattedTextField nicknameInput;
@@ -48,13 +54,15 @@ public class LauncherScene extends JPanel implements IScene {
 
 	private final Action quitAction = new QuitAction();
 	private final Action enableQueryServerPortInputAction = new EnableQueryServerPortInputAction();
+	private final Action createServerAction = new CreateServerAction();
 	
 	/**
 	 * Create the panel.
 	 */
-	public LauncherScene(ILogStream logStream, IApp app, short standardQueryServerPort) {
+	public LauncherScene(ILogStream logStream, IApp app, int standardGameServerPort, int standardQueryServerPort) {
 		this.log = new Log(logStream, "launcher-scene");
 		this.app = app;
+		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
 		
 		setup();
@@ -64,7 +72,7 @@ public class LauncherScene extends JPanel implements IScene {
 
 		log.debug("setup launcher scene...");
 		setBorder(new EmptyBorder(4, 10, 10, 10));
-		setLayout(new MigLayout("", "[][shrink 95][][grow,fill][]", "[][][][grow][][][][]"));
+		setLayout(new MigLayout("", "[][][][grow,fill][]", "[][][][grow][][][][]"));
 		
 		JLabel lblTradewar = new JLabel("TradeWar");
 		lblTradewar.setFont(new Font("Tahoma", Font.BOLD, 40));
@@ -114,6 +122,7 @@ public class LauncherScene extends JPanel implements IScene {
 		});
 		
 		JButton btnCreateServerButton = new JButton("Server");
+		btnCreateServerButton.setAction(createServerAction);
 		add(btnCreateServerButton, "cell 4 4,growx");
 		
 		JButton btnRefreshButton = new JButton("Refresh");
@@ -210,6 +219,7 @@ public class LauncherScene extends JPanel implements IScene {
 			putValue(NAME, "");
 			putValue(SHORT_DESCRIPTION, "Enables the port for the server hook!");
 		}
+		
 		public void actionPerformed(ActionEvent e) {
 			boolean enableSpecPort = specificQueryServerPortCheckBox.isSelected();
 			
@@ -218,6 +228,24 @@ public class LauncherScene extends JPanel implements IScene {
 			}
 			
 			specificQueryServerPortInput.setEnabled(enableSpecPort);
+		}
+	}
+	
+	private class CreateServerAction extends AbstractAction {
+		public CreateServerAction() {
+			putValue(NAME, "Server");
+			putValue(SHORT_DESCRIPTION, "Open server creation dialog.");
+		}
+		
+		public void actionPerformed(ActionEvent e) {
+			List<String> modlist = new Vector<>();
+			modlist.add("TradeWar Classic");
+			modlist.add("TradeWar Nations");
+			ServerCreationDialog scdlg = new ServerCreationDialog(modlist, standardGameServerPort, standardQueryServerPort);
+			
+			if(scdlg.showDialog()) {
+				log.debug("Create Server successfully closed!");
+			}
 		}
 	}
 }
