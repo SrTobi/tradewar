@@ -19,6 +19,7 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.TitledBorder;
 
+import tradewar.api.IServerStartParams;
 import net.miginfocom.swing.MigLayout;
 
 public class ServerCreationDialog extends JDialog {
@@ -58,7 +59,7 @@ public class ServerCreationDialog extends JDialog {
         setTitle("Create server");
 		setBounds(100, 100, 250, 350);
 		setLocationRelativeTo(null);
-        //setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setModalityType(JDialog.ModalityType.APPLICATION_MODAL);
         setResizable(false);
         getContentPane().setLayout(new MigLayout("", "[grow][fill]", "[][grow][23px]"));
@@ -126,6 +127,10 @@ public class ServerCreationDialog extends JDialog {
 		setVisible(true);
 		
 		return isSuccesfullyClosed();
+	}
+	
+	public IServerStartParams getStartParams() {
+		return new ServerStartParams(this);
 	}
 	
 	public boolean isSuccesfullyClosed() {

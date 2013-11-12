@@ -1,4 +1,4 @@
-package tradewar.api.io;
+package tradewar.api;
 
 import java.io.InputStream;
 import java.io.OutputStream;
