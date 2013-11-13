@@ -6,20 +6,27 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.DefaultTableModel;
 
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
+import tradewar.api.IModInfo;
 import tradewar.api.IScene;
+import tradewar.app.Application;
+import tradewar.app.ConfigManager;
+import tradewar.app.ModManager;
 import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
 
@@ -38,8 +45,10 @@ public class LauncherScene extends JPanel implements IScene {
 
 	private static final long serialVersionUID = 4078132421255645474L;
 	
-	private Log log;
+	private Log log = new Log(Application.LOGSTREAM, "launcher-scene");
 	private IApp app;
+	private ModManager modManager;
+	private ConfigManager configManager;
 	
 	private int standardQueryServerPort;
 	private int standardGameServerPort;
@@ -59,9 +68,11 @@ public class LauncherScene extends JPanel implements IScene {
 	/**
 	 * Create the panel.
 	 */
-	public LauncherScene(ILogStream logStream, IApp app, int standardGameServerPort, int standardQueryServerPort) {
-		this.log = new Log(logStream, "launcher-scene");
+	public LauncherScene(IApp app, ConfigManager configManager, ModManager modManager, int standardGameServerPort, int standardQueryServerPort) {
+		
 		this.app = app;
+		this.configManager = configManager;
+		this.modManager = modManager;
 		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
 		
@@ -238,10 +249,19 @@ public class LauncherScene extends JPanel implements IScene {
 		}
 		
 		public void actionPerformed(ActionEvent e) {
-			List<String> modlist = new Vector<>();
-			modlist.add("TradeWar Classic");
-			modlist.add("TradeWar Nations");
-			ServerCreationDialog scdlg = new ServerCreationDialog(modlist, standardGameServerPort, standardQueryServerPort);
+			
+			IModInfo[] mods = modManager.getModInfos();
+			
+			if(mods.length == 0) {
+				
+				JOptionPane.showMessageDialog(null, "No mods are installed! Please get mods and put them into the mod folder!", "No mods to start!", JOptionPane.ERROR_MESSAGE);
+				
+				return;
+			}
+			
+			
+			
+			ServerCreationDialog scdlg = new ServerCreationDialog(mods, standardGameServerPort, standardQueryServerPort);
 			
 			if(scdlg.showDialog()) {
 				log.debug("Create Server successfully closed!");

@@ -19,6 +19,8 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.TitledBorder;
 
+import sun.awt.ModalityListener;
+import tradewar.api.IModInfo;
 import tradewar.api.IServerStartParams;
 import net.miginfocom.swing.MigLayout;
 
@@ -30,7 +32,7 @@ public class ServerCreationDialog extends JDialog {
 	private JTextField serverNameInput;
 	private JSpinner gameServerPortInput;
 	private JPasswordField serverPasswortInput;
-	private JComboBox<String> modSelect;
+	private JComboBox<IModInfo> modSelect;
 	
 	private final Action createServerAction = new CreateServerAction();
 	private final Action cancelAction = new CancelServerCreationAction();
@@ -40,16 +42,16 @@ public class ServerCreationDialog extends JDialog {
 	private int standardGameServerPort;
 	private int standardQueryServerPort;
 	
-	private List<String> modList;
+	private IModInfo[] modList;
 
 	/**
 	 * Create the dialog.
 	 */
-	public ServerCreationDialog(List<String> modList, int standardGameServerPort, int standardQueryServerPort) {
+	public ServerCreationDialog(IModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
 
 		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
-		this.modList = modList;
+		this.modList = mods;
 		
 		setup();
 	}
@@ -70,7 +72,7 @@ public class ServerCreationDialog extends JDialog {
         panelModGroup.setLayout(new MigLayout("", "[grow]", "[]"));
         
         modSelect = new JComboBox<>();
-        modSelect.setModel(new DefaultComboBoxModel<String>(new Vector<String>(modList)));
+        modSelect.setModel(new DefaultComboBoxModel<IModInfo>(modList));
         panelModGroup.add(modSelect, "cell 0 0,growx");
         
         JPanel panelServerGroup = new JPanel();

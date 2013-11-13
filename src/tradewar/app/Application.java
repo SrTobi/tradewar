@@ -2,11 +2,13 @@ package tradewar.app;
 
 
 import java.awt.EventQueue;
+import java.io.IOException;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import tradewar.api.IApp;
+import tradewar.api.IDirectory;
 import tradewar.api.ISceneFrame;
 import tradewar.app.gui.ApplicationWindow;
 import tradewar.app.gui.LauncherScene;
@@ -15,11 +17,17 @@ import tradewar.utils.log.Log;
 
 public class Application implements IApp, Runnable {
 
-	private static int STANDARD_GAMESERVER_PORT = 23451;
-	private static int STANDARD_QUERYSERVER_PORT = 23452;
+	public static final ILogStream LOGSTREAM = ILogStream.sys;
 	
-	private Log log = new Log(ILogStream.sys, "app");
-	ApplicationWindow mainWin;
+	private static final int STANDARD_GAMESERVER_PORT = 23451;
+	private static final int STANDARD_QUERYSERVER_PORT = 23452;
+	
+	private Log log = new Log(LOGSTREAM, "app");
+	private FileManager fileManager;
+	private ModManager modManager;
+	private ConfigManager configManager;
+	private IDirectory rootDirectory;
+	private ApplicationWindow mainWin;
 	
 	public Application(String[] args) {
 
@@ -38,14 +46,33 @@ public class Application implements IApp, Runnable {
 			log.err("Failed to set look and feel!");
 			log.excp(e);
 		}
+        
+        try {
+			fileManager = new FileManager(LOGSTREAM);
+			rootDirectory = fileManager.getRoot();
+		} catch (IOException e) {
+					
+			log.crit("Failed to initialize file manager!");
+			log.excp(e);
+			log.crit("Exiting...");
+	
+			return;
+		}
+        
+        configManager = new ConfigManager(rootDirectory.getSubDirectory("config", true));
+        
+        modManager = new ModManager(rootDirectory.getSubDirectory("mods", true), configManager.getConfig("mod-manager.cfg"));
+        
+        
+        
 		
 		mainWin = new ApplicationWindow(log.getStream(), "MainWindow");
-		mainWin.setScene(new LauncherScene(log.getStream(), this, STANDARD_GAMESERVER_PORT, STANDARD_QUERYSERVER_PORT));
+		mainWin.setScene(new LauncherScene(this, configManager, modManager, STANDARD_GAMESERVER_PORT, STANDARD_QUERYSERVER_PORT));
 		
 		mainWin.setVisible(true);
 	}
 	
-
+	
 	private void shutdown() {
 
 		log.info("Application closed!");
