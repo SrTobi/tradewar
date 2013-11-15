@@ -61,7 +61,8 @@ public class Application implements IApp, Runnable {
         
         configManager = new ConfigManager(rootDirectory.getSubDirectory("config", true));
         
-        modManager = new ModManager(rootDirectory.getSubDirectory("mods", true), configManager.getConfig("mod-manager.cfg"));
+        IStartableModInfo[] innerMods = new IStartableModInfo[] { tradewar.app.mods.classic.TradeWarClassic.INST };
+        modManager = new ModManager(rootDirectory.getSubDirectory("mods", true), configManager.getConfig("mod-manager.cfg"), innerMods);
         
         
         

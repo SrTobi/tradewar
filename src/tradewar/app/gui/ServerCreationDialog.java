@@ -2,16 +2,17 @@ package tradewar.app.gui;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.util.List;
-import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JSpinner;
@@ -19,20 +20,31 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.TitledBorder;
 
-import sun.awt.ModalityListener;
 import tradewar.api.IModInfo;
 import tradewar.api.IServerStartParams;
+import tradewar.app.IStartableModInfo;
 import net.miginfocom.swing.MigLayout;
 
 public class ServerCreationDialog extends JDialog {
 
+	private static class IModInfoRenderer extends DefaultListCellRenderer {
+	    public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus ) {
+	        Object item = value;
+
+	        if( item instanceof IModInfo ) {
+	            item = ( ( IModInfo ) item ).getName();
+	        }
+	        return super.getListCellRendererComponent( list, item, index, isSelected, cellHasFocus);
+	    }
+	}
 
 	private boolean successfulClosed = false;
 	
 	private JTextField serverNameInput;
 	private JSpinner gameServerPortInput;
 	private JPasswordField serverPasswortInput;
-	private JComboBox<IModInfo> modSelect;
+	private JComboBox<IStartableModInfo> modSelect;
+	private ComboBoxModel<IStartableModInfo> modSelectModel;
 	
 	private final Action createServerAction = new CreateServerAction();
 	private final Action cancelAction = new CancelServerCreationAction();
@@ -42,12 +54,12 @@ public class ServerCreationDialog extends JDialog {
 	private int standardGameServerPort;
 	private int standardQueryServerPort;
 	
-	private IModInfo[] modList;
+	private IStartableModInfo[] modList;
 
 	/**
 	 * Create the dialog.
 	 */
-	public ServerCreationDialog(IModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
+	public ServerCreationDialog(IStartableModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
 
 		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
@@ -71,8 +83,10 @@ public class ServerCreationDialog extends JDialog {
         getContentPane().add(panelModGroup, "cell 0 0 2 1,grow");
         panelModGroup.setLayout(new MigLayout("", "[grow]", "[]"));
         
+        modSelectModel = new DefaultComboBoxModel<IStartableModInfo>(modList);
         modSelect = new JComboBox<>();
-        modSelect.setModel(new DefaultComboBoxModel<IModInfo>(modList));
+        modSelect.setModel(modSelectModel);
+        modSelect.setRenderer(new IModInfoRenderer());
         panelModGroup.add(modSelect, "cell 0 0,growx");
         
         JPanel panelServerGroup = new JPanel();
@@ -157,6 +171,10 @@ public class ServerCreationDialog extends JDialog {
 	
 	public int getMaxPlayer() {
 		return (Integer)maxPlayerInput.getValue();
+	}
+	
+	public IStartableModInfo getSelectedMod() {
+		return modSelectModel.getElementAt(modSelect.getSelectedIndex());
 	}
 	
 	private class CreateServerAction extends AbstractAction {

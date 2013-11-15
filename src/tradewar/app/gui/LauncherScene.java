@@ -3,43 +3,35 @@ package tradewar.app.gui;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JDialog;
+import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
-import tradewar.api.IModInfo;
 import tradewar.api.IScene;
 import tradewar.app.Application;
 import tradewar.app.ConfigManager;
+import tradewar.app.IStartableModInfo;
 import tradewar.app.ModManager;
-import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
-
-import javax.swing.Action;
-
-import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.Vector;
-
-import javax.swing.border.TitledBorder;
-import javax.swing.JCheckBox;
-import javax.swing.JTextField;
-import javax.swing.BoxLayout;
 
 public class LauncherScene extends JPanel implements IScene {
 
@@ -250,7 +242,7 @@ public class LauncherScene extends JPanel implements IScene {
 		
 		public void actionPerformed(ActionEvent e) {
 			
-			IModInfo[] mods = modManager.getModInfos();
+			IStartableModInfo[] mods = modManager.getModInfos();
 			
 			if(mods.length == 0) {
 				

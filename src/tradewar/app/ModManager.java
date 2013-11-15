@@ -6,12 +6,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.jar.JarInputStream;
+
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
+import tradewar.api.IMod;
 import tradewar.api.IModInfo;
+import tradewar.utils.TWClassLoader;
 import tradewar.utils.log.Log;
 
 public class ModManager {
@@ -23,7 +30,7 @@ public class ModManager {
 	
 	private static final String CONFIG_MODLIST = "mod-list";
 
-	private class ExtendedModInfo implements IModInfo {		
+	private class ExtendedModInfo implements IStartableModInfo {		
 		public String name;
 		public String description;
 		public String author;
@@ -50,6 +57,12 @@ public class ModManager {
 		public String getVersion() {
 			return version;
 		}
+
+		@Override
+		public IMod instantiate() {
+
+			return null;
+		}
 		
 		public String getModPath() {
 			return modPath;
@@ -60,9 +73,11 @@ public class ModManager {
 	private IDirectory modDir;
 	private IConfig config;
 	
+	private IStartableModInfo[] integratedMods;
 	private ArrayList<ExtendedModInfo> modList;
 	
-	ModManager(IDirectory modDir, IConfig modConfig) {
+	ModManager(IDirectory modDir, IConfig modConfig, IStartableModInfo[] integratedMods) {
+		this.integratedMods = (integratedMods == null? new IStartableModInfo[0] : integratedMods);
 		this.modDir = modDir;
 		this.config = modConfig;
 		
@@ -78,12 +93,16 @@ public class ModManager {
 		buildModListFromModDirectory();
 	}
 	
-	public IModInfo[] getModInfos() {
-		return modList.toArray(new IModInfo[getModCount()]);
+	public IStartableModInfo[] getModInfos() {
+		List<IStartableModInfo> list = Arrays.asList(integratedMods);
+
+		list.addAll(modList);
+		
+		return list.toArray(new IStartableModInfo[list.size()]);
 	}
 	
 	public int getModCount() {
-		return modList.size();
+		return modList.size() + integratedMods.length;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -166,7 +185,7 @@ public class ModManager {
 		}
 		
 		if(!dir.exists(modMainFile.replace('.', '/'))) {
-			log.err("Directory does not contain the mod class \"" + modMainFile + "\"!");			
+			log.err("Directory[" + dir.getPath() + "] does not contain the mod class \"" + modMainFile + "\"!");			
 			return null;
 		}
 		
@@ -179,7 +198,31 @@ public class ModManager {
 		}
 		
 		log.info("Was not on the list! Gather information...");
+
+		ClassLoader loader = new TWClassLoader(dir);
+		Class<?> plainClass = null;
+		Class<? extends IMod> mainModClass = null;
 		
+		try {
+			plainClass = loader.loadClass(modMainFile);
+			mainModClass = plainClass.asSubclass(IMod.class);
+
+		} catch (ClassNotFoundException e) {
+			log.err("Failed to load mod main class!");
+			log.excp(e);
+			
+			return null;
+		
+		} catch(ClassCastException e) {
+			log.crit("Was able to load mod main class, but main class does not implements the tradewar.api.IMod interface!");
+			log.excp(e);
+			
+			return null;
+		}	
+		
+	//	Constructor<? extends IMod> ctors = mainModClass.getConstructors();
+		
+			
 		return null;
 	}
 	
