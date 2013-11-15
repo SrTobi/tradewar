@@ -1,19 +1,13 @@
 package tradewar.app;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.jar.JarInputStream;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
+import tradewar.api.IApp;
 import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
 import tradewar.api.IMod;
@@ -37,6 +31,7 @@ public class ModManager {
 		public String version;
 		
 		public String modPath;
+		public String uid;
 
 		@Override
 		public String getName() {
@@ -67,16 +62,27 @@ public class ModManager {
 		public String getModPath() {
 			return modPath;
 		}
+
+		@Override
+		public String getUID() {
+			return uid;
+		}
 	}
 
 	private Log log = new Log(Application.LOGSTREAM, "mod-manager");
+	private IApp app;
+	private ConfigManager configManager;
+	
 	private IDirectory modDir;
 	private IConfig config;
+	
 	
 	private IStartableModInfo[] integratedMods;
 	private ArrayList<ExtendedModInfo> modList;
 	
-	ModManager(IDirectory modDir, IConfig modConfig, IStartableModInfo[] integratedMods) {
+	ModManager(IApp app, ConfigManager configManager, IDirectory modDir, IConfig modConfig, IStartableModInfo[] integratedMods) {
+		this.app = app;
+		this.configManager = configManager;
 		this.integratedMods = (integratedMods == null? new IStartableModInfo[0] : integratedMods);
 		this.modDir = modDir;
 		this.config = modConfig;
@@ -93,12 +99,34 @@ public class ModManager {
 		buildModListFromModDirectory();
 	}
 	
-	public IStartableModInfo[] getModInfos() {
-		List<IStartableModInfo> list = Arrays.asList(integratedMods);
+	public IModInfo[] getModInfos() {
+		IModInfo[] list = new IModInfo[getModCount()];
 
-		list.addAll(modList);
+		System.arraycopy(integratedMods, 0, list, 0, integratedMods.length);
 		
-		return list.toArray(new IStartableModInfo[list.size()]);
+		int target = integratedMods.length;
+		for(IModInfo info : modList) {
+			list[target++] = info;
+		}
+
+		return list;
+	}
+	
+	public IMod startMod(IModInfo modInfo) {
+		
+		if(modInfo instanceof IStartableModInfo) {
+			IStartableModInfo smodInfo = ((IStartableModInfo)modInfo);
+			IMod mod = smodInfo.instantiate();
+			
+			IConfig config = configManager.getConfig("mods/" + smodInfo.getUID());
+			
+			mod.init(app, config);
+
+			return mod;
+		}
+		
+		log.wtf(modInfo.getName() + " was not a registered mod!");
+		return null;
 	}
 	
 	public int getModCount() {

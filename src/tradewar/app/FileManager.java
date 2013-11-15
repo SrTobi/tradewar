@@ -11,7 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import tradewar.api.IDirectory;
-import tradewar.utils.log.ILogStream;
+import tradewar.api.ILogStream;
 import tradewar.utils.log.Log;
 
 class FileManager {

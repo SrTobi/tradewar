@@ -7,9 +7,9 @@ import java.util.LinkedList;
 
 import javax.swing.JFrame;
 
+import tradewar.api.ILogStream;
 import tradewar.api.IScene;
 import tradewar.api.ISceneFrame;
-import tradewar.utils.log.ILogStream;
 import tradewar.utils.log.Log;
 
 public class ApplicationWindow extends JFrame implements ISceneFrame {

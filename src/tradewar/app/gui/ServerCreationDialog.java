@@ -43,8 +43,8 @@ public class ServerCreationDialog extends JDialog {
 	private JTextField serverNameInput;
 	private JSpinner gameServerPortInput;
 	private JPasswordField serverPasswortInput;
-	private JComboBox<IStartableModInfo> modSelect;
-	private ComboBoxModel<IStartableModInfo> modSelectModel;
+	private JComboBox<IModInfo> modSelect;
+	private ComboBoxModel<IModInfo> modSelectModel;
 	
 	private final Action createServerAction = new CreateServerAction();
 	private final Action cancelAction = new CancelServerCreationAction();
@@ -54,12 +54,12 @@ public class ServerCreationDialog extends JDialog {
 	private int standardGameServerPort;
 	private int standardQueryServerPort;
 	
-	private IStartableModInfo[] modList;
+	private IModInfo[] modList;
 
 	/**
 	 * Create the dialog.
 	 */
-	public ServerCreationDialog(IStartableModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
+	public ServerCreationDialog(IModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
 
 		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
@@ -83,7 +83,7 @@ public class ServerCreationDialog extends JDialog {
         getContentPane().add(panelModGroup, "cell 0 0 2 1,grow");
         panelModGroup.setLayout(new MigLayout("", "[grow]", "[]"));
         
-        modSelectModel = new DefaultComboBoxModel<IStartableModInfo>(modList);
+        modSelectModel = new DefaultComboBoxModel<IModInfo>(modList);
         modSelect = new JComboBox<>();
         modSelect.setModel(modSelectModel);
         modSelect.setRenderer(new IModInfoRenderer());
@@ -173,7 +173,7 @@ public class ServerCreationDialog extends JDialog {
 		return (Integer)maxPlayerInput.getValue();
 	}
 	
-	public IStartableModInfo getSelectedMod() {
+	public IModInfo getSelectedMod() {
 		return modSelectModel.getElementAt(modSelect.getSelectedIndex());
 	}
 	

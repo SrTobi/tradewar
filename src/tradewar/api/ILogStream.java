@@ -1,6 +1,9 @@
-package tradewar.utils.log;
+package tradewar.api;
 
 import java.io.PrintStream;
+
+import tradewar.utils.log.LogMessage;
+import tradewar.utils.log.LogPriority;
 
 
 

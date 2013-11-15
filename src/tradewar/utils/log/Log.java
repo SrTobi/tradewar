@@ -1,5 +1,7 @@
 package tradewar.utils.log;
 
+import tradewar.api.ILogStream;
+
 public class Log {
 	
 	public static Log log = new Log(new ILogStream.SystemLogStream(), "global");

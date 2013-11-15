@@ -26,10 +26,10 @@ import javax.swing.table.DefaultTableModel;
 
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
+import tradewar.api.IModInfo;
 import tradewar.api.IScene;
 import tradewar.app.Application;
 import tradewar.app.ConfigManager;
-import tradewar.app.IStartableModInfo;
 import tradewar.app.ModManager;
 import tradewar.utils.log.Log;
 
@@ -242,7 +242,7 @@ public class LauncherScene extends JPanel implements IScene {
 		
 		public void actionPerformed(ActionEvent e) {
 			
-			IStartableModInfo[] mods = modManager.getModInfos();
+			IModInfo[] mods = modManager.getModInfos();
 			
 			if(mods.length == 0) {
 				

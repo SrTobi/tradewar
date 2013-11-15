@@ -15,6 +15,7 @@ public class TradeWarClassic implements IMod {
 	public static final String MODINFO_AUTHOR = "Tobias Kahlert";
 	public static final String MODINFO_DESC = "A remake of the famous original TradeWar gameplay";
 	public static final String MODINFO_VERSION = "0.0.0.1";
+	public static final String MODINFO_UID = "Tradewar-Classic";
 
 	public static final IStartableModInfo INST = new IStartableModInfo() {
 		
@@ -41,6 +42,11 @@ public class TradeWarClassic implements IMod {
 		@Override
 		public IMod instantiate() {
 			return new TradeWarClassic();
+		}
+
+		@Override
+		public String getUID() {
+			return MODINFO_UID;
 		}
 	};
 	
