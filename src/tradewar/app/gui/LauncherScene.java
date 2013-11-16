@@ -26,11 +26,16 @@ import javax.swing.table.DefaultTableModel;
 
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
+import tradewar.api.IMod;
 import tradewar.api.IModInfo;
+import tradewar.api.IQueryServer;
 import tradewar.api.IScene;
+import tradewar.api.IServer;
+import tradewar.api.IServerStartParams;
 import tradewar.app.Application;
 import tradewar.app.ConfigManager;
 import tradewar.app.ModManager;
+import tradewar.app.network.QueryServer;
 import tradewar.utils.log.Log;
 
 public class LauncherScene extends JPanel implements IScene {
@@ -249,14 +254,20 @@ public class LauncherScene extends JPanel implements IScene {
 				JOptionPane.showMessageDialog(null, "No mods are installed! Please get mods and put them into the mod folder!", "No mods to start!", JOptionPane.ERROR_MESSAGE);
 				
 				return;
-			}
-			
-			
+			}			
 			
 			ServerCreationDialog scdlg = new ServerCreationDialog(mods, standardGameServerPort, standardQueryServerPort);
 			
 			if(scdlg.showDialog()) {
-				log.debug("Create Server successfully closed!");
+				log.debug("Create Server dialog closed successfully!");
+				
+				IModInfo modInfo = scdlg.getSelectedMod();
+				IServerStartParams ssparams = scdlg.getStartParams();
+				
+				IMod mod = modManager.startMod(modInfo);
+				
+				IQueryServer qsrv = new QueryServer(ssparams);
+				IServer server = mod.createDedicatedServer(ssparams, qsrv);
 			}
 		}
 	}
