@@ -110,6 +110,17 @@ public final class QueryResponse {
 		return serverPort;
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof QueryResponse) {
+			QueryResponse other = (QueryResponse)obj;
+			
+			return other.getResponseData().equals(other.getResponseData());
+		}
+		
+		return false;
+	}
+	
 	public String getResponseData() {
 
 		return	ANSWER_PREFIX + ANSWER_SEPERATOR
