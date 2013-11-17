@@ -103,7 +103,7 @@ public class TradeWarClassic implements IMod {
 
 	@Override
 	public IServer createDedicatedServer(IServerStartParams params, IQueryServer queryServer) {
-		return null;
+		return new Server();
 	}
 
 }

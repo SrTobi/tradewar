@@ -5,26 +5,28 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import tradewar.api.IQueryServer;
+import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.Application;
 import tradewar.utils.log.Log;
 
 public class QueryServer implements IQueryServer, Runnable {
 
-	public static final String REQUEST_PHRASE = "tradewar-query-request";
-	public static final String ANSWER_PREFIX = "tradewar-query-answer";
-	public static final String ANSWER_SEPERATOR = "\n";
 	
 	private Log log = new Log(Application.LOGSTREAM, "query-server");
     private DatagramSocket serverSocket;
-	private IServerStartParams ssparams;
 	private boolean active = false;
-
-    private byte[] serverInfoData;
+	
+	private IServerStartParams ssparams;
+	private String serverAddr;
+	private IServer server;
 	
 	public QueryServer(IServerStartParams ssparams) {
+		
+		this.server = null;
 		this.ssparams = ssparams;
 		
 		try {
@@ -36,17 +38,27 @@ public class QueryServer implements IQueryServer, Runnable {
 			return;
 		}
 		
-		String serverInfo =	ANSWER_PREFIX + ANSWER_SEPERATOR
-						  +	ssparams.getServerName() + ANSWER_SEPERATOR
-						  + (ssparams.getServerPassword().isEmpty() ? "no" : "yes") + ANSWER_SEPERATOR
-						  + ssparams.getMaxPlayer() + ANSWER_SEPERATOR
-						  + serverSocket.getInetAddress().getHostAddress() + ANSWER_SEPERATOR
-						  + ssparams.getGameServerPort() + ANSWER_SEPERATOR;
-		
-		serverInfoData = serverInfo.getBytes();				  
+		try {
+			setServerAddress(InetAddress.getLocalHost().getHostAddress());
+		} catch (UnknownHostException e) {
+			log.err("Failed to resolve local ip-address!");
+			log.excp(e);
+		}
 	}
 
+	public void setServer(IServer server) {
+		this.server = server;
+	}
+	
+	@Override
+	public void setServerAddress(String addr) {
 
+		if(addr.matches(QueryResponse.ANSWER_PATTERN_SERVERADDR)) {
+			serverAddr = addr;
+		}
+	}
+	
+	
 	@Override
 	public void run() {
 
@@ -57,19 +69,21 @@ public class QueryServer implements IQueryServer, Runnable {
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 				
 		        serverSocket.receive(receivePacket);
-		        String sentence = new String(receivePacket.getData());
+		        String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
 		        InetAddress ipAddress = receivePacket.getAddress();
 		        
-		        if(sentence.equals(REQUEST_PHRASE)) {
+		        if(sentence.equals(QueryResponse.REQUEST_PHRASE)) {
 
-			        int port = receivePacket.getPort();
-			        DatagramPacket sendPacket = new DatagramPacket(serverInfoData, serverInfoData.length, ipAddress, port);
-			        serverSocket.send(sendPacket);
+		        	if(serverAddr != null && server != null) {
+			        	byte[] response = createResponse().getResponseData().getBytes();
+				        int port = receivePacket.getPort();
+				        DatagramPacket sendPacket = new DatagramPacket(response, response.length, ipAddress, port);
+				        serverSocket.send(sendPacket);
+		        	}
+		        } else {
+			        log.err("Bad request from " + ipAddress.getHostAddress() + "!");
 		        }
-		        
-		        log.err("Bad request from " + ipAddress.getHostAddress() + "!");
-		        
 		        
 			}catch(IOException e) {
 				log.err("Error while waiting for request! Never mind...");
@@ -96,6 +110,20 @@ public class QueryServer implements IQueryServer, Runnable {
 		return active;
 	}
 
+	
+	private QueryResponse createResponse() {
+
+		QueryResponse response = new QueryResponse(	ssparams.getServerName(),
+													null,
+													!ssparams.getServerPassword().isEmpty(),
+													0,
+													server.getPlayerCount(),
+													ssparams.getMaxPlayer(),
+													serverAddr,
+													ssparams.getGameServerPort());
+		
+		return response;
+	}
 	
 	private void start() {
 		if(!active) {

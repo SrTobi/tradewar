@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -19,6 +20,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -35,6 +37,9 @@ import tradewar.api.IServerStartParams;
 import tradewar.app.Application;
 import tradewar.app.ConfigManager;
 import tradewar.app.ModManager;
+import tradewar.app.network.QueryEmitter;
+import tradewar.app.network.QueryResponse;
+import tradewar.app.network.QueryResponseListener;
 import tradewar.app.network.QueryServer;
 import tradewar.utils.log.Log;
 
@@ -46,6 +51,9 @@ public class LauncherScene extends JPanel implements IScene {
 	private IApp app;
 	private ModManager modManager;
 	private ConfigManager configManager;
+	
+	private QueryEmitter queryEmitter;
+	private GameOverviewModel gameOverviewModel;
 	
 	private int standardQueryServerPort;
 	private int standardGameServerPort;
@@ -60,6 +68,7 @@ public class LauncherScene extends JPanel implements IScene {
 
 	private final Action quitAction = new QuitAction();
 	private final Action enableQueryServerPortInputAction = new EnableQueryServerPortInputAction();
+	private final Action refreshServerOverview = new RefreshServerOverviewAction();
 	private final Action createServerAction = new CreateServerAction();
 	
 	/**
@@ -114,26 +123,27 @@ public class LauncherScene extends JPanel implements IScene {
 		gameOverviewScrollPane.setViewportView(gameOverview);
 		gameOverview.setFillsViewportHeight(true);
 		gameOverview.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		gameOverview.setModel(new DefaultTableModel(
-			new Object[][] {
-			},
-			new String[] {
-				"Server", "Mod", "Passwort", "Spieler", "Ip"
-			}
-		) {
-			Class<?>[] columnTypes = new Class[] {
-				String.class, String.class, Boolean.class, Object.class, String.class
-			};
-			public Class<?> getColumnClass(int columnIndex) {
-				return columnTypes[columnIndex];
-			}
-		});
+		gameOverview.setModel(gameOverviewModel = new GameOverviewModel());
+		gameOverview.getColumnModel().getColumn(0).setPreferredWidth(100);
+		gameOverview.getColumnModel().getColumn(0).setMinWidth(50);
+		gameOverview.getColumnModel().getColumn(1).setPreferredWidth(100);
+		gameOverview.getColumnModel().getColumn(1).setMinWidth(50);
+		gameOverview.getColumnModel().getColumn(2).setPreferredWidth(60);
+		gameOverview.getColumnModel().getColumn(2).setMinWidth(60);
+		gameOverview.getColumnModel().getColumn(2).setMaxWidth(80);
+		gameOverview.getColumnModel().getColumn(3).setPreferredWidth(60);
+		gameOverview.getColumnModel().getColumn(3).setMinWidth(45);
+		gameOverview.getColumnModel().getColumn(3).setMaxWidth(60);
+		gameOverview.getColumnModel().getColumn(4).setPreferredWidth(100);
+		gameOverview.getColumnModel().getColumn(4).setMinWidth(90);
+		gameOverview.getColumnModel().getColumn(4).setMaxWidth(135);
 		
 		JButton btnCreateServerButton = new JButton("Server");
 		btnCreateServerButton.setAction(createServerAction);
 		add(btnCreateServerButton, "cell 4 4,growx");
 		
 		JButton btnRefreshButton = new JButton("Refresh");
+		btnRefreshButton.setAction(refreshServerOverview);
 		add(btnRefreshButton, "cell 4 5,growx");
 		
 		JButton btnDirectConnectButton = new JButton("Direct Connect");
@@ -163,19 +173,6 @@ public class LauncherScene extends JPanel implements IScene {
 		
 		JButton btnConnectButton = new JButton("Connect");
 		add(btnConnectButton, "cell 4 7,growx");
-		gameOverview.getColumnModel().getColumn(0).setPreferredWidth(100);
-		gameOverview.getColumnModel().getColumn(0).setMinWidth(50);
-		gameOverview.getColumnModel().getColumn(1).setPreferredWidth(100);
-		gameOverview.getColumnModel().getColumn(1).setMinWidth(50);
-		gameOverview.getColumnModel().getColumn(2).setPreferredWidth(60);
-		gameOverview.getColumnModel().getColumn(2).setMinWidth(60);
-		gameOverview.getColumnModel().getColumn(2).setMaxWidth(80);
-		gameOverview.getColumnModel().getColumn(3).setPreferredWidth(60);
-		gameOverview.getColumnModel().getColumn(3).setMinWidth(45);
-		gameOverview.getColumnModel().getColumn(3).setMaxWidth(60);
-		gameOverview.getColumnModel().getColumn(4).setPreferredWidth(100);
-		gameOverview.getColumnModel().getColumn(4).setMinWidth(90);
-		gameOverview.getColumnModel().getColumn(4).setMaxWidth(135);
 		
 	}
 	
@@ -238,6 +235,55 @@ public class LauncherScene extends JPanel implements IScene {
 			specificQueryServerPortInput.setEnabled(enableSpecPort);
 		}
 	}
+
+	private class RefreshServerOverviewAction extends AbstractAction implements QueryResponseListener{
+		public RefreshServerOverviewAction() {
+			putValue(NAME, "Refresh");
+			putValue(SHORT_DESCRIPTION, "Searches for game servers.");
+		}
+		
+		public void actionPerformed(ActionEvent evt) {
+
+			if(queryEmitter != null && queryEmitter.isSearching()) {
+				queryEmitter.search(false);
+				queryEmitter.removeResponseListener(this);
+			}
+			
+			gameOverviewModel.clear();
+			
+			try {
+				queryEmitter = new QueryEmitter(log.getStream(), standardQueryServerPort);
+				queryEmitter.addResponseListener(this);
+				queryEmitter.search(true);
+			} catch (IOException e) {
+				log.crit("Failed to create query emitter!");
+				log.excp(e);
+			}
+		}
+
+		@Override
+		public void onResponse(final QueryResponse response) {
+			
+			SwingUtilities.invokeLater(new Runnable() {
+				
+				@Override
+				public void run() {
+					gameOverviewModel.addResponse(response);
+				}
+			});
+		}
+
+		@Override
+		public void onSearchStop() {
+			SwingUtilities.invokeLater(new Runnable() {
+				
+				@Override
+				public void run() {
+					queryEmitter = null;
+				}
+			});			
+		}
+	}
 	
 	private class CreateServerAction extends AbstractAction {
 		public CreateServerAction() {
@@ -266,8 +312,17 @@ public class LauncherScene extends JPanel implements IScene {
 				
 				IMod mod = modManager.startMod(modInfo);
 				
-				IQueryServer qsrv = new QueryServer(ssparams);
+				QueryServer qsrv = new QueryServer(ssparams);
 				IServer server = mod.createDedicatedServer(ssparams, qsrv);
+				
+				if(server == null) {
+					log.crit("Failed to start modification!");
+					return;
+				}
+				
+				qsrv.setServer(server);
+				
+				qsrv.setActive(true);
 			}
 		}
 	}

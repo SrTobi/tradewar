@@ -2,6 +2,8 @@ package tradewar.api;
 
 public interface IServer {
 
-	void start(ISceneFrame frame);
-	void stop();
+	public int getPlayerCount();
+	
+	public void start(ISceneFrame frame);
+	public void stop();
 }
