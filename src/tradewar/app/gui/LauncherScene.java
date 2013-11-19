@@ -69,6 +69,7 @@ public class LauncherScene extends JPanel implements IScene {
 	private final Action refreshServerOverview = new RefreshServerOverviewAction();
 	private final Action connectAction = new ConnectAction();
 	private final Action createServerAction = new CreateServerAction();
+	private final Action directConnectAction = new DirectConnectAction();
 	
 	/**
 	 * Create the panel.
@@ -146,6 +147,7 @@ public class LauncherScene extends JPanel implements IScene {
 		add(btnRefreshButton, "cell 4 5,growx");
 		
 		JButton btnDirectConnectButton = new JButton("Direct Connect");
+		btnDirectConnectButton.setAction(directConnectAction);
 		add(btnDirectConnectButton, "cell 4 6,growx");
 		
 		JButton btnQuitButton = new JButton("Quit");
@@ -304,6 +306,44 @@ public class LauncherScene extends JPanel implements IScene {
 		 	
 		 	DailUpDialog dlg = new DailUpDialog(r.getServerAddress(), r.getServerPort());
 			dlg.setVisible(true);
+		}
+	}
+
+	private class DirectConnectAction extends AbstractAction {
+		public DirectConnectAction() {
+			putValue(NAME, "Direct Connect");
+			putValue(SHORT_DESCRIPTION, "Connect to a server.");
+		}
+		
+		public void actionPerformed(ActionEvent evt) {
+
+			String ip = (String)JOptionPane.showInputDialog(null,
+										                    "Please enter the address of the target machine:",
+										                    "Direct Connect",
+										                    JOptionPane.PLAIN_MESSAGE,
+										                    null,
+										                    null,
+										                    "");
+			
+			if(ip != null) {
+
+				int port = standardGameServerPort;				
+				String[] parts = ip.split(":");
+				
+				if(parts.length >= 2) {
+					ip = parts[0];
+					try {
+						port = Integer.parseInt(parts[1]);
+					} catch(NumberFormatException e) 
+					{
+						log.err("Direct connect address does not contains a port number after the ':'!");
+					}
+					
+				}
+				
+			 	DailUpDialog dlg = new DailUpDialog(ip, port);
+				dlg.setVisible(true);
+			}
 		}
 	}
 	

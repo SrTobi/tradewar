@@ -20,7 +20,13 @@ public class DailUpDialog extends JDialog {
 	private Log log = new Log(Application.LOGSTREAM, "dailup-dlg");
 	private ConnectionBuilder builder;
 	
+	private int port;
+	private String address;
+	
 	public DailUpDialog(String addr, int port) {
+		
+		this.address = addr;
+		this.port = port;
 		
 		builder = new ConnectionBuilder(addr, port) {
 			
@@ -53,7 +59,7 @@ public class DailUpDialog extends JDialog {
 		setBounds(100, 100, 400, 120);
 		getContentPane().setLayout(new MigLayout("", "[66.00,grow][]", "[grow][25px:n][grow]"));
 		
-		JLabel lblNewLabel = new JLabel("Connecting");
+		JLabel lblNewLabel = new JLabel("Connecting to " + address + ", Port " + port);
 		getContentPane().add(lblNewLabel, "cell 0 0 2 1,growx,aligny center");
 		
 		JProgressBar progressBar = new JProgressBar();
