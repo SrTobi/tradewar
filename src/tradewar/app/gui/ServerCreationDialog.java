@@ -137,6 +137,7 @@ public class ServerCreationDialog extends JDialog {
         btnCancelButton.setAction(cancelAction);
         getContentPane().add(btnCancelButton, "cell 1 2");
         
+        pack();
 	}
 
 	public boolean showDialog() {
