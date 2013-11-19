@@ -1,10 +1,18 @@
 package tradewar.app.gui;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.Socket;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -23,7 +31,9 @@ public class DailUpDialog extends JDialog {
 	private int port;
 	private String address;
 	
-	public DailUpDialog(String addr, int port) {
+	private Action cancelAction = new CancelAction();
+	
+	public DailUpDialog(String addr, final int port) {
 		
 		this.address = addr;
 		this.port = port;
@@ -34,26 +44,38 @@ public class DailUpDialog extends JDialog {
 			public void onFailed(IOException e) {
 				log.err("Connection failed!");
 				log.excp(e);
+				DailUpDialog.this.setVisible(false);
+				JOptionPane.showMessageDialog(null, "Failed to connect to " + address + ":" + port, "Connection error!", JOptionPane.ERROR_MESSAGE);
 			}
 			
 			@Override
 			public void onConnected(Socket socket) {
 				log.info("Connected!");
+				DailUpDialog.this.dispose();
 			}
 			
 			@Override
 			public void onCanceled() {
 				log.err("Connection canceled!");
+				DailUpDialog.this.dispose();
 			}
 		};
 		
 		setup();
 		
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+		        builder.cancel();
+			}
+		});
+		
+		// Start connecting
 		builder.connect();
 	}
 	
 	public void setup() {
 		setTitle("Connecting...");
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setModal(true);
 
 		setBounds(100, 100, 400, 120);
@@ -71,6 +93,22 @@ public class DailUpDialog extends JDialog {
 
 		setResizable(false);
 		setLocationRelativeTo(null);
+	}
+	
+	class CancelAction extends AbstractAction {
+
+
+		public CancelAction() {
+			putValue(NAME, "Cancel");
+			putValue(SHORT_DESCRIPTION, "Cancels connection attempt");
+		}
+		
+		
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			builder.cancel();
+		}
+		
 	}
 
 }

@@ -24,6 +24,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
 import tradewar.api.IMod;
@@ -34,10 +35,10 @@ import tradewar.api.IServerStartParams;
 import tradewar.app.Application;
 import tradewar.app.ConfigManager;
 import tradewar.app.ModManager;
+import tradewar.app.network.IQueryResponseListener;
 import tradewar.app.network.ListenServer;
 import tradewar.app.network.QueryEmitter;
 import tradewar.app.network.QueryResponse;
-import tradewar.app.network.QueryResponseListener;
 import tradewar.app.network.QueryServer;
 import tradewar.utils.log.Log;
 
@@ -66,7 +67,7 @@ public class LauncherScene extends JPanel implements IScene {
 
 	private final Action quitAction = new QuitAction();
 	private final Action enableQueryServerPortInputAction = new EnableQueryServerPortInputAction();
-	private final Action refreshServerOverview = new RefreshServerOverviewAction();
+	private final Action refreshServerOverviewAction = new RefreshServerOverviewAction();
 	private final Action connectAction = new ConnectAction();
 	private final Action createServerAction = new CreateServerAction();
 	private final Action directConnectAction = new DirectConnectAction();
@@ -143,7 +144,7 @@ public class LauncherScene extends JPanel implements IScene {
 		add(btnCreateServerButton, "cell 4 4,growx");
 		
 		JButton btnRefreshButton = new JButton("Refresh");
-		btnRefreshButton.setAction(refreshServerOverview);
+		btnRefreshButton.setAction(refreshServerOverviewAction);
 		add(btnRefreshButton, "cell 4 5,growx");
 		
 		JButton btnDirectConnectButton = new JButton("Direct Connect");
@@ -207,6 +208,43 @@ public class LauncherScene extends JPanel implements IScene {
 
 		specificQueryServerPortInput.setText("" + standardQueryServerPort);
 	}
+	
+	private void refreshServerOverview() {
+
+		IQueryResponseListener listener = new IQueryResponseListener() {
+
+			@Override
+			public void onResponse(final QueryResponse response) {
+				
+				SwingUtilities.invokeLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						gameOverviewModel.addResponse(response);
+					}
+				});
+			}
+
+			@Override
+			public void onSearchStop() {	
+			}
+		};
+		
+		if(queryEmitter != null && queryEmitter.isSearching()) {
+			queryEmitter.search(false);
+		}
+		
+		gameOverviewModel.clear();
+		
+		try {
+			queryEmitter = new QueryEmitter(log.getStream(), standardQueryServerPort);
+			queryEmitter.addResponseListener(listener);
+			queryEmitter.search(true);
+		} catch (IOException e) {
+			log.crit("Failed to create query emitter!");
+			log.excp(e);
+		}
+	}
 
 	private class QuitAction extends AbstractAction {
 		public QuitAction() {
@@ -215,6 +253,7 @@ public class LauncherScene extends JPanel implements IScene {
 		}
 		public void actionPerformed(ActionEvent e) {
 			
+			System.gc();
 			log.debug("Quit pressed!");			
 			app.getMainSceneFrame().removeScene(LauncherScene.this);
 		}
@@ -238,52 +277,14 @@ public class LauncherScene extends JPanel implements IScene {
 		}
 	}
 
-	private class RefreshServerOverviewAction extends AbstractAction implements QueryResponseListener{
+	private class RefreshServerOverviewAction extends AbstractAction{
 		public RefreshServerOverviewAction() {
 			putValue(NAME, "Refresh");
 			putValue(SHORT_DESCRIPTION, "Searches for game servers.");
 		}
 		
 		public void actionPerformed(ActionEvent evt) {
-
-			if(queryEmitter != null && queryEmitter.isSearching()) {
-				queryEmitter.search(false);
-				queryEmitter.removeResponseListener(this);
-			}
-			
-			gameOverviewModel.clear();
-			
-			try {
-				queryEmitter = new QueryEmitter(log.getStream(), standardQueryServerPort);
-				queryEmitter.addResponseListener(this);
-				queryEmitter.search(true);
-			} catch (IOException e) {
-				log.crit("Failed to create query emitter!");
-				log.excp(e);
-			}
-		}
-
-		@Override
-		public void onResponse(final QueryResponse response) {
-			
-			SwingUtilities.invokeLater(new Runnable() {
-				
-				@Override
-				public void run() {
-					gameOverviewModel.addResponse(response);
-				}
-			});
-		}
-
-		@Override
-		public void onSearchStop() {
-			SwingUtilities.invokeLater(new Runnable() {
-				
-				@Override
-				public void run() {
-					queryEmitter = null;
-				}
-			});			
+			refreshServerOverview();
 		}
 	}
 	
@@ -397,6 +398,10 @@ public class LauncherScene extends JPanel implements IScene {
 				qsrv.setServer(server);
 				
 				qsrv.setActive(true);
+				
+				
+				// Refresh server list
+				refreshServerOverview();
 			}
 		}
 	}

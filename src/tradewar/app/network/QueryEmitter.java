@@ -16,7 +16,7 @@ public class QueryEmitter implements Runnable {
 	
 	private Log log;
 	
-	private Collection<QueryResponseListener> listener = new HashSet<>();
+	private Collection<IQueryResponseListener> listener = new HashSet<>();
 	private DatagramSocket socket;
 	private boolean searching = false;
 	private int targetPort;
@@ -28,12 +28,16 @@ public class QueryEmitter implements Runnable {
 		socket = new DatagramSocket();
 	}
 	
-	public void addResponseListener(QueryResponseListener listener) {
+	public void addResponseListener(IQueryResponseListener listener) {
 		this.listener.add(listener);
 	}
 	
-	public void removeResponseListener(QueryResponseListener listener) {
+	public void removeResponseListener(IQueryResponseListener listener) {
 		this.listener.remove(listener);
+	}
+	
+	public void removeAllResponseListener() {
+		this.listener.clear();
 	}
 	
 	public void search(boolean search) {
@@ -105,7 +109,7 @@ public class QueryEmitter implements Runnable {
 	}
 	
 	private void notifyListener(QueryResponse response) {
-		for(QueryResponseListener l : listener) {
+		for(IQueryResponseListener l : listener) {
 			l.onResponse(response);
 		}
 	}

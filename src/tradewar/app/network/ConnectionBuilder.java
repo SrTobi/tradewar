@@ -45,8 +45,8 @@ public abstract class ConnectionBuilder implements Runnable {
 		try {
 			socket = new Socket(address, port);
 		} catch (IOException e) {
-			onFailed(e);
-			return;
+			if(connecting)
+				onFailed(e);
 		}
 
 		if(connecting) {

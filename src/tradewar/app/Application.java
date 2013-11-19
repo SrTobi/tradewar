@@ -47,6 +47,9 @@ public class Application implements IApp, Runnable {
 			log.excp(e);
 		}
         
+        UIManager.put("ProgressBar.repaintInterval", new Integer(10));
+        UIManager.put("ProgressBar.cycleTime", new Integer(6000));
+        
         try {
 			fileManager = new FileManager(LOGSTREAM);
 			rootDirectory = fileManager.getRoot();
