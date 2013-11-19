@@ -4,11 +4,15 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
+
 import tradewar.api.ILogStream;
 import tradewar.utils.log.Log;
 
@@ -80,29 +84,43 @@ public class QueryEmitter implements Runnable {
 	}
 	
 	private boolean broadcastRequest() {
+
+		System.setProperty("java.net.preferIPv4Stack", "true");
 		
-		InetAddress addr;
+		Enumeration<NetworkInterface> niEnum = null;
 		try {
-			addr = InetAddress.getByName("192.168.1.255");
-		} catch (UnknownHostException e) {
-			log.err("Failed to resolve broadcast ip-address!");
+			niEnum = NetworkInterface.getNetworkInterfaces();
+		} catch (SocketException e) {
+			log.crit("Failed to get network interfaces for broadcast!");
 			log.excp(e);
-			
 			return false;
 		}
-		//log.info("Own ip is " + addr.getHostAddress());
-		log.debug("Broadcasting query request[" + addr.getHostAddress() + "]...");
+
+		// build packet
+		byte[] request = QueryResponse.REQUEST_PHRASE.getBytes();		
 		
-		byte[] request = QueryResponse.REQUEST_PHRASE.getBytes();
-		DatagramPacket packet = new DatagramPacket(request, request.length, addr, targetPort);
-		
-		try {
-			socket.send(packet);
-		} catch (IOException e) {
-			log.err("Failed to broadcast query request!");
-			log.excp(e);
+		while (niEnum.hasMoreElements()) {
+			NetworkInterface ni = niEnum.nextElement();
+			log.debug("Found network interface:" + ni.getDisplayName() + "\n");
 			
-			return false;
+			for (InterfaceAddress interfaceAddress : ni.getInterfaceAddresses()) {
+				InetAddress addr = interfaceAddress.getBroadcast();
+				
+				if(addr == null) {
+					continue;
+				}
+				
+				log.info("Broadcast query request to " + addr);
+
+				DatagramPacket packet = new DatagramPacket(request, request.length, addr, targetPort);
+				
+				try {
+					socket.send(packet);
+				} catch (IOException e) {
+					log.err("Failed to broadcast query request!");
+					log.excp(e);
+				}
+			}
 		}
 		
 		return true;
