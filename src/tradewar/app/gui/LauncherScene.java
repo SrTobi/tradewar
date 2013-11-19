@@ -24,19 +24,17 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
-
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
 import tradewar.api.IMod;
 import tradewar.api.IModInfo;
-import tradewar.api.IQueryServer;
 import tradewar.api.IScene;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.Application;
 import tradewar.app.ConfigManager;
 import tradewar.app.ModManager;
+import tradewar.app.network.ListenServer;
 import tradewar.app.network.QueryEmitter;
 import tradewar.app.network.QueryResponse;
 import tradewar.app.network.QueryResponseListener;
@@ -69,6 +67,7 @@ public class LauncherScene extends JPanel implements IScene {
 	private final Action quitAction = new QuitAction();
 	private final Action enableQueryServerPortInputAction = new EnableQueryServerPortInputAction();
 	private final Action refreshServerOverview = new RefreshServerOverviewAction();
+	private final Action connectAction = new ConnectAction();
 	private final Action createServerAction = new CreateServerAction();
 	
 	/**
@@ -172,6 +171,7 @@ public class LauncherScene extends JPanel implements IScene {
 		lblInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		JButton btnConnectButton = new JButton("Connect");
+		btnConnectButton.setAction(connectAction);
 		add(btnConnectButton, "cell 4 7,growx");
 		
 	}
@@ -285,13 +285,35 @@ public class LauncherScene extends JPanel implements IScene {
 		}
 	}
 	
+
+	private class ConnectAction extends AbstractAction {
+		public ConnectAction() {
+			putValue(NAME, "Connect");
+			putValue(SHORT_DESCRIPTION, "Connect to a server.");
+		}
+		
+		public void actionPerformed(ActionEvent evt) {
+			
+			int row = gameOverview.getSelectedRow();
+			
+			if(row < 0) {
+				return;
+			}
+			
+		 	QueryResponse r = gameOverviewModel.getRowData(row);
+		 	
+		 	DailUpDialog dlg = new DailUpDialog(r.getServerAddress(), r.getServerPort());
+			dlg.setVisible(true);
+		}
+	}
+	
 	private class CreateServerAction extends AbstractAction {
 		public CreateServerAction() {
 			putValue(NAME, "Server");
 			putValue(SHORT_DESCRIPTION, "Open server creation dialog.");
 		}
 		
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent evt) {
 			
 			IModInfo[] mods = modManager.getModInfos();
 			
@@ -310,16 +332,28 @@ public class LauncherScene extends JPanel implements IScene {
 				IModInfo modInfo = scdlg.getSelectedMod();
 				IServerStartParams ssparams = scdlg.getStartParams();
 				
-				IMod mod = modManager.startMod(modInfo);
+
+				ListenServer lsrv;
+				try {
+					lsrv = new ListenServer(log.getStream(), ssparams);
+				} catch (IOException e) {
+					log.err("Failed to create listen-server!");
+					log.excp(e);
+					return;
+				}
 				
 				QueryServer qsrv = new QueryServer(ssparams);
-				IServer server = mod.createDedicatedServer(ssparams, qsrv);
+				
+				IMod mod = modManager.startMod(modInfo);
+				IServer server = mod.createDedicatedServer(ssparams, lsrv, qsrv);
+				
 				
 				if(server == null) {
 					log.crit("Failed to start modification!");
 					return;
 				}
 				
+				lsrv.setServerListener(server);
 				qsrv.setServer(server);
 				
 				qsrv.setActive(true);

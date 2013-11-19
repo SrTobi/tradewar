@@ -16,5 +16,5 @@ public interface IMod {
 	public boolean hasClientSideServerContol();
 	
 	public IClient createClient();
-	public IServer createDedicatedServer(IServerStartParams params, IQueryServer queryServer);
+	public IServer createDedicatedServer(IServerStartParams params, IListenServer listenServer, IQueryServer queryServer);
 }

@@ -3,6 +3,7 @@ package tradewar.app.mods.classic;
 import tradewar.api.IApp;
 import tradewar.api.IClient;
 import tradewar.api.IConfig;
+import tradewar.api.IListenServer;
 import tradewar.api.IMod;
 import tradewar.api.IQueryServer;
 import tradewar.api.IServer;
@@ -102,7 +103,7 @@ public class TradeWarClassic implements IMod {
 	}
 
 	@Override
-	public IServer createDedicatedServer(IServerStartParams params, IQueryServer queryServer) {
+	public IServer createDedicatedServer(IServerStartParams params, IListenServer listenServer, IQueryServer queryServer) {
 		return new Server();
 	}
 

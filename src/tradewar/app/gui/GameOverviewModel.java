@@ -27,6 +27,10 @@ public class GameOverviewModel extends AbstractTableModel {
 		}
 		
 	}
+	
+	public QueryResponse getRowData(int row) {
+		return entries.get(row);
+	}
 
 	public void clear() {
 		entries = new ArrayList<>();
