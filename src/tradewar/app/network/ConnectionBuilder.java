@@ -50,7 +50,7 @@ public abstract class ConnectionBuilder implements Runnable {
 		}
 
 		if(connecting) {
-			onConnected(socket);
+			handleHandshake();
 		}else{
 			onCanceled();
 		}
@@ -58,6 +58,10 @@ public abstract class ConnectionBuilder implements Runnable {
 		connecting = false;
 	}
 	
+	private void handleHandshake() {
+		
+	}
+
 	public abstract void onConnected(Socket socket);
 	public abstract void onCanceled();
 	public abstract void onFailed(IOException e);

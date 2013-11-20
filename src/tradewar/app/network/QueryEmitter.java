@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -101,7 +100,7 @@ public class QueryEmitter implements Runnable {
 		
 		while (niEnum.hasMoreElements()) {
 			NetworkInterface ni = niEnum.nextElement();
-			log.debug("Found network interface:" + ni.getDisplayName() + "\n");
+			log.debug("Found network interface:" + ni.getDisplayName());
 			
 			for (InterfaceAddress interfaceAddress : ni.getInterfaceAddresses()) {
 				InetAddress addr = interfaceAddress.getBroadcast();
