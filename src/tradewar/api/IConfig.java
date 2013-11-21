@@ -3,6 +3,8 @@ package tradewar.api;
 import java.io.Serializable;
 
 public interface IConfig {
+	
+	public IConfig getSubConfig(String path);
 
 	public <E extends Serializable> E get(String id, Class<? extends E> clazz);
 	public <E extends Serializable> E get(String id, E defaultValue);

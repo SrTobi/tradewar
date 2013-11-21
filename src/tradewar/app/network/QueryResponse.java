@@ -2,6 +2,8 @@ package tradewar.app.network;
 
 import java.text.ParseException;
 
+import tradewar.app.FormatPatterns;
+
 
 public final class QueryResponse {
 
@@ -9,10 +11,10 @@ public final class QueryResponse {
 	public static final String ANSWER_PREFIX = "begin:tradewar-query-answer";
 	public static final String ANSWER_SURFIX = "end:tradewar-query-answer";
 	public static final String ANSWER_SEPERATOR = "\n";
-	public static final String ANSWER_PATTERN_SERVERNAME = "[\\p{Blank}\\p{Graph}]{3,20}";
-	public static final String ANSWER_PATTERN_MODNAME = "[\\p{Blank}\\p{Graph}]{3,20}";
+	public static final String ANSWER_PATTERN_SERVERNAME = FormatPatterns.SERVERNAME;
+	public static final String ANSWER_PATTERN_MODNAME = FormatPatterns.MODNAME;
 	public static final String ANSWER_PATTERN_HASPASSWORD = "(yes)|(no)";
-	public static final String ANSWER_PATTERN_SERVERADDR = "[\\p{Blank}\\p{Graph}]{1,50}";
+	public static final String ANSWER_PATTERN_SERVERADDR = FormatPatterns.SERVERADDR;
 	public static final int ANSWER_LINES = 8;
 	
 	private final String serverName;

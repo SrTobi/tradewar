@@ -12,7 +12,7 @@ import tradewar.utils.log.Log;
 
 public class ConfigManager {
 
-	public final boolean DEFAULT_AUTOSAVE = true;
+	public final boolean DEFAULT_AUTOSAVE = false;
 	
 	private Log log = new Log(Application.LOGSTREAM, "config-manager");
 	private IDirectory configDir;
@@ -78,6 +78,7 @@ public class ConfigManager {
 
 		@Override
 		public synchronized <E extends Serializable> void set(String id, E value) {
+			
 			values.put(id, value);
 			
 			if(getAutoSave()) {
@@ -126,7 +127,7 @@ public class ConfigManager {
 					os = new ObjectInputStream(configDir.readFile(configPath));
 				} catch (IOException e) {
 					log.err("Failed to open config file: " + configPath);
-					log.excp(e);
+					//log.excp(e);
 					return false;
 				}
 				
@@ -155,6 +156,11 @@ public class ConfigManager {
 			}
 			
 			return true;
+		}
+
+		@Override
+		public IConfig getSubConfig(String path) {
+			return getConfig(FileManager.concatinate(FileManager.parentDir(configPath), path));
 		}
 		
 	}

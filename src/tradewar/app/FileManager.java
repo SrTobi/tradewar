@@ -76,6 +76,26 @@ class FileManager {
 		return rootDirectory;
 	}
 	
+	public static String concatinate(String path1, String path2) {
+
+		path1 = path1.replace('\\', '/');
+		path2 = path2.replace('\\', '/');
+		
+		if(!path1.endsWith("/")) {
+			return path1 + "/" + path2;
+		}
+		return path1 + path2;
+	}
+	
+	
+	public static String parentDir(String path) {
+
+		path = path.replace('\\', '/');
+		
+		int idx = path.lastIndexOf('/', path.length() - 2);
+		
+		return (idx >= 0? path.substring(0, idx + 1) : "");
+	}
 	
 	
 	/**

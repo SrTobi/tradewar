@@ -8,6 +8,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import tradewar.api.IApp;
+import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
 import tradewar.api.ILogStream;
 import tradewar.api.ISceneFrame;
@@ -69,14 +70,17 @@ public class Application implements IApp, Runnable {
         
         configManager = new ConfigManager(rootDirectory.getSubDirectory("config", true));
         
+        IConfig modManagerConfig = configManager.getConfig("mod-manager.cfg");
+        IConfig launcherSceneConfig = configManager.getConfig("launcher-scene.cfg");
+        
         IStartableModInfo[] innerMods = new IStartableModInfo[] { tradewar.app.mods.classic.TradeWarClassic.INST };
-        modManager = new ModManager(this, configManager, rootDirectory.getSubDirectory("mods", true), configManager.getConfig("mod-manager.cfg"), innerMods);
+        modManager = new ModManager(this, configManager, rootDirectory.getSubDirectory("mods", true), modManagerConfig, innerMods);
         
         
         
 		
 		mainWin = new ApplicationWindow(log.getStream(), "MainWindow");
-		mainWin.setScene(new LauncherScene(this, configManager, modManager, STANDARD_GAMESERVER_PORT, STANDARD_QUERYSERVER_PORT));
+		mainWin.setScene(new LauncherScene(this, launcherSceneConfig, modManager, STANDARD_GAMESERVER_PORT, STANDARD_QUERYSERVER_PORT));
 		
 		mainWin.setVisible(true);
 	}

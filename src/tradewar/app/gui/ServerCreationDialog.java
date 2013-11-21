@@ -18,13 +18,18 @@ import javax.swing.JPasswordField;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
+import net.miginfocom.swing.MigLayout;
+import tradewar.api.IConfig;
 import tradewar.api.IModInfo;
 import tradewar.api.IServerStartParams;
-import tradewar.app.IStartableModInfo;
-import net.miginfocom.swing.MigLayout;
+import tradewar.app.FormatPatterns;
+import tradewar.utils.ConfigBinding;
+import tradewar.utils.ConfigDocumentBinder;
+import tradewar.utils.FormChecker;
+import tradewar.utils.IValidityChangeListener;
+import tradewar.utils.ValidityBackgroundChanger;
 
 public class ServerCreationDialog extends JDialog {
 
@@ -55,18 +60,35 @@ public class ServerCreationDialog extends JDialog {
 	private int standardGameServerPort;
 	private int standardQueryServerPort;
 	
+	private ConfigBinding cfgBinding = new ConfigBinding();
+	private FormChecker formChecker = new FormChecker();
+
+	private IConfig config;
+	
 	private IModInfo[] modList;
+
 
 	/**
 	 * Create the dialog.
 	 */
-	public ServerCreationDialog(IModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
+	public ServerCreationDialog(IConfig config, IModInfo[] mods, int standardGameServerPort, int standardQueryServerPort) {
 
+		this.config = config;
 		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
 		this.modList = mods;
 		
 		setup();
+		
+		formChecker.addValidityChangeListener(new IValidityChangeListener() {
+			
+			@Override
+			public void onValidityChange(boolean valid) {
+				createServerAction.setEnabled(valid);
+			}
+		});
+		cfgBinding.load();
+		formChecker.setNotifying(true);
 	}
 
 	private void setup() {
@@ -100,6 +122,8 @@ public class ServerCreationDialog extends JDialog {
         
         serverNameInput = new JTextField();
         panelServerGroup.add(serverNameInput, "cell 0 1 2 1,growx");
+		cfgBinding.addBinder(new ConfigDocumentBinder(config, "server-name", serverNameInput.getDocument()));
+        formChecker.addChecker(ValidityBackgroundChanger.createDocumentChecker(FormatPatterns.SERVERNAME, serverNameInput));
         serverNameInput.setColumns(10);
         
         JLabel lblPassword = new JLabel("Password:");
@@ -188,7 +212,7 @@ public class ServerCreationDialog extends JDialog {
 			putValue(SHORT_DESCRIPTION, "Some short description");
 		}
 		public void actionPerformed(ActionEvent e) {
-			
+			cfgBinding.save();
 			successfulClosed = true;
 			dispose();
 		}

@@ -11,7 +11,6 @@ import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,19 +26,24 @@ import javax.swing.border.TitledBorder;
 
 import net.miginfocom.swing.MigLayout;
 import tradewar.api.IApp;
+import tradewar.api.IConfig;
 import tradewar.api.IMod;
 import tradewar.api.IModInfo;
 import tradewar.api.IScene;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.Application;
-import tradewar.app.ConfigManager;
+import tradewar.app.FormatPatterns;
 import tradewar.app.ModManager;
 import tradewar.app.network.IQueryResponseListener;
 import tradewar.app.network.ListenServer;
 import tradewar.app.network.QueryEmitter;
 import tradewar.app.network.QueryResponse;
 import tradewar.app.network.QueryServer;
+import tradewar.utils.ConfigBinding;
+import tradewar.utils.ConfigDocumentBinder;
+import tradewar.utils.FormChecker;
+import tradewar.utils.ValidityBackgroundChanger;
 import tradewar.utils.log.Log;
 
 public class LauncherScene extends JPanel implements IScene {
@@ -49,8 +53,10 @@ public class LauncherScene extends JPanel implements IScene {
 	private Log log = new Log(Application.LOGSTREAM, "launcher-scene");
 	private IApp app;
 	private ModManager modManager;
-	private ConfigManager configManager;
+	private IConfig config;
 	
+	private ConfigBinding cfgBinding = new ConfigBinding();
+	private FormChecker formChecker = new FormChecker();
 	private QueryEmitter queryEmitter;
 	private GameOverviewModel gameOverviewModel;
 	
@@ -58,7 +64,7 @@ public class LauncherScene extends JPanel implements IScene {
 	private int standardGameServerPort;
 	
 	private JTable gameOverview;
-	private JFormattedTextField nicknameInput;
+	private JTextField nicknameInput;
 	private JLabel lblInfoLabel;
 	private JPanel panel;
 	private JTextField specificQueryServerPortInput;
@@ -75,15 +81,18 @@ public class LauncherScene extends JPanel implements IScene {
 	/**
 	 * Create the panel.
 	 */
-	public LauncherScene(IApp app, ConfigManager configManager, ModManager modManager, int standardGameServerPort, int standardQueryServerPort) {
+	public LauncherScene(IApp app, IConfig config, ModManager modManager, int standardGameServerPort, int standardQueryServerPort) {
 		
 		this.app = app;
-		this.configManager = configManager;
+		this.config = config;
 		this.modManager = modManager;
 		this.standardGameServerPort = standardGameServerPort;
 		this.standardQueryServerPort = standardQueryServerPort;
 		
 		setup();
+		
+		cfgBinding.load();
+		formChecker.setNotifying(true);
 	}
 	
 	private void setup() {
@@ -100,7 +109,9 @@ public class LauncherScene extends JPanel implements IScene {
 		JLabel lblNickname = new JLabel("Nickname:");
 		add(lblNickname, "cell 0 1,alignx trailing");
 		
-		nicknameInput = new JFormattedTextField();
+		nicknameInput = new JTextField();
+		cfgBinding.addBinder(new ConfigDocumentBinder(config, "nickname", nicknameInput.getDocument()));
+		formChecker.addChecker(ValidityBackgroundChanger.createDocumentChecker(FormatPatterns.NICKNAME, nicknameInput));
 		add(nicknameInput, "cell 1 1 3 1,growx");
 		
 		JLabel versionLabel = new JLabel(Application.APP_VERSION.getVersionCode());
@@ -203,10 +214,13 @@ public class LauncherScene extends JPanel implements IScene {
 	public void onRegister() {}
 	@Override
 	public void onUnregister() {}
+	
 	@Override
 	public void onEnter() {}
 	@Override
-	public void onLeave() {}
+	public void onLeave() {
+		cfgBinding.save();
+	}
 	
 	private void resetStandardQueryPortInputField() {
 
@@ -369,7 +383,7 @@ public class LauncherScene extends JPanel implements IScene {
 				return;
 			}			
 			
-			ServerCreationDialog scdlg = new ServerCreationDialog(mods, standardGameServerPort, standardQueryServerPort);
+			ServerCreationDialog scdlg = new ServerCreationDialog(config.getSubConfig("server-creation-dlg.cfg"), mods, standardGameServerPort, standardQueryServerPort);
 			
 			if(scdlg.showDialog()) {
 				log.debug("Create Server dialog closed successfully!");
