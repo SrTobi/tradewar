@@ -36,7 +36,7 @@ public class DialUpDialog extends JDialog {
 		this.address = addr;
 		this.port = port;
 		
-		builder = new ConnectionBuilder(log.getStream(), Application.APP_VERSION, addr, port) {
+		builder = new ConnectionBuilder(log.getStream(), addr, port) {
 			
 			@Override
 			public void onFailed(IOException e) {
