@@ -18,6 +18,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import tradewar.api.IModInfo;
@@ -137,7 +138,10 @@ public class ServerCreationDialog extends JDialog {
         btnCancelButton.setAction(cancelAction);
         getContentPane().add(btnCancelButton, "cell 1 2");
         
+        
         pack();
+        getRootPane().setDefaultButton(btnCreateButton);
+        serverNameInput.requestFocusInWindow();
 	}
 
 	public boolean showDialog() {

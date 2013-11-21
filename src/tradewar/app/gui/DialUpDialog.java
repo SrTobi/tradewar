@@ -1,29 +1,27 @@
 package tradewar.app.gui;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.net.Socket;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.JProgressBar;
 import javax.swing.JLabel;
 
+import tradewar.api.ISocket;
 import tradewar.app.Application;
 import tradewar.app.network.ConnectionBuilder;
 import tradewar.utils.log.Log;
 
-public class DailUpDialog extends JDialog {
+public class DialUpDialog extends JDialog {
 
 	private Log log = new Log(Application.LOGSTREAM, "dailup-dlg");
 	private ConnectionBuilder builder;
@@ -33,37 +31,37 @@ public class DailUpDialog extends JDialog {
 	
 	private Action cancelAction = new CancelAction();
 	
-	public DailUpDialog(String addr, final int port) {
+	public DialUpDialog(String addr, final int port) {
 		
 		this.address = addr;
 		this.port = port;
 		
-		builder = new ConnectionBuilder(addr, port) {
+		builder = new ConnectionBuilder(log.getStream(), Application.APP_VERSION, addr, port) {
 			
 			@Override
 			public void onFailed(IOException e) {
-				log.err("Connection failed!");
-				log.excp(e);
-				DailUpDialog.this.setVisible(false);
-				JOptionPane.showMessageDialog(null, "Failed to connect to " + address + ":" + port, "Connection error!", JOptionPane.ERROR_MESSAGE);
+				DialUpDialog.this.dispose();
+				
+				ExceptionDialog.normalFail("Connection failed!", "Failed to connect to " + address + ":" + port, e, log);
 			}
 			
 			@Override
-			public void onConnected(Socket socket) {
+			public void onConnected(ISocket socket) {
 				log.info("Connected!");
-				DailUpDialog.this.dispose();
+				DialUpDialog.this.dispose();
 			}
 			
 			@Override
 			public void onCanceled() {
 				log.err("Connection canceled!");
-				DailUpDialog.this.dispose();
+				DialUpDialog.this.dispose();
 			}
 		};
 		
 		setup();
 		
 		addWindowListener(new WindowAdapter() {
+			@Override
 			public void windowClosing(WindowEvent e) {
 		        builder.cancel();
 			}
@@ -79,6 +77,7 @@ public class DailUpDialog extends JDialog {
 		setModal(true);
 
 		setBounds(100, 100, 400, 120);
+		setMinimumSize(new Dimension(400, 120));
 		getContentPane().setLayout(new MigLayout("", "[66.00,grow][]", "[grow][25px:n][grow]"));
 		
 		JLabel lblNewLabel = new JLabel("Connecting to " + address + ", Port " + port);
@@ -89,10 +88,13 @@ public class DailUpDialog extends JDialog {
 		getContentPane().add(progressBar, "cell 0 1 2 1,grow");
 		
 		JButton btnCancel = new JButton("Cancel");
+		btnCancel.setAction(cancelAction);
 		getContentPane().add(btnCancel, "cell 1 2,alignx right,aligny bottom");
 
 		setResizable(false);
 		setLocationRelativeTo(null);
+		
+		pack();
 	}
 	
 	class CancelAction extends AbstractAction {
@@ -107,6 +109,7 @@ public class DailUpDialog extends JDialog {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
 			builder.cancel();
+			DialUpDialog.this.dispose();
 		}
 		
 	}

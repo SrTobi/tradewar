@@ -13,10 +13,14 @@ import tradewar.api.ILogStream;
 import tradewar.api.ISceneFrame;
 import tradewar.app.gui.ApplicationWindow;
 import tradewar.app.gui.LauncherScene;
+import tradewar.utils.Version;
 import tradewar.utils.log.Log;
 
 public class Application implements IApp, Runnable {
 
+	public static final Version APP_VERSION = new Version(	"TradeWar",
+															1, 1,
+															21, 11, 2013);
 	public static final ILogStream LOGSTREAM = ILogStream.sys;
 	
 	private static final int STANDARD_GAMESERVER_PORT = 23451;
@@ -37,6 +41,7 @@ public class Application implements IApp, Runnable {
 	public void run() {
 
 		log.info("Start application...");
+		log.info("Version is: " + APP_VERSION.getVersionCode());
 		
         try {
         	log.debug("Setup look and feel...");

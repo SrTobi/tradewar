@@ -9,6 +9,7 @@ import tradewar.api.IListenServer;
 import tradewar.api.ILogStream;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
+import tradewar.api.ISocket;
 import tradewar.utils.log.Log;
 
 public class ListenServer implements IListenServer, Runnable {
@@ -17,24 +18,25 @@ public class ListenServer implements IListenServer, Runnable {
 	private IServerStartParams ssparams;
 	private IServer server;
 	private ServerSocket listenSocket;
-	private boolean listening;
+	private boolean listening = false;
 	
 	private SynchronousQueue<Object> eventQueue;
 	
 	
 	private class Player implements Runnable {
 
-		Socket socket;
+		ISocket socket;
 		
-		Player(Socket s) {
-			this.socket = s;
+		Player(Socket s) throws IOException {
+			this.socket = new ConnectionSocket(log.getStream(), s);
 			new Thread(this).start();
 		}
 		
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-			
+			while(true) {
+				socket.waitForPacket();
+			}
 		}
 	}
 	
@@ -85,6 +87,7 @@ public class ListenServer implements IListenServer, Runnable {
 
 	@Override
 	public void run() {
+		log.info("Start acceping on port " + ssparams.getGameServerPort());
 
 		while(isListening()) {
 			try {

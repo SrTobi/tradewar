@@ -103,6 +103,10 @@ public class LauncherScene extends JPanel implements IScene {
 		nicknameInput = new JFormattedTextField();
 		add(nicknameInput, "cell 1 1 3 1,growx");
 		
+		JLabel versionLabel = new JLabel(Application.APP_VERSION.getVersionCode());
+		versionLabel.setFont(new Font("Tahoma", Font.PLAIN, 9));
+		add(versionLabel, "cell 4 1,alignx right,aligny center");
+		
 		JPanel specificPortGroup = new JPanel();
 		specificPortGroup.setBorder(new TitledBorder(null, "Port", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		add(specificPortGroup, "cell 4 2,grow");
@@ -305,7 +309,7 @@ public class LauncherScene extends JPanel implements IScene {
 			
 		 	QueryResponse r = gameOverviewModel.getRowData(row);
 		 	
-		 	DailUpDialog dlg = new DailUpDialog(r.getServerAddress(), r.getServerPort());
+		 	DialUpDialog dlg = new DialUpDialog(r.getServerAddress(), r.getServerPort());
 			dlg.setVisible(true);
 		}
 	}
@@ -342,7 +346,7 @@ public class LauncherScene extends JPanel implements IScene {
 					
 				}
 				
-			 	DailUpDialog dlg = new DailUpDialog(ip, port);
+			 	DialUpDialog dlg = new DialUpDialog(ip, port);
 				dlg.setVisible(true);
 			}
 		}
@@ -378,8 +382,7 @@ public class LauncherScene extends JPanel implements IScene {
 				try {
 					lsrv = new ListenServer(log.getStream(), ssparams);
 				} catch (IOException e) {
-					log.err("Failed to create listen-server!");
-					log.excp(e);
+					ExceptionDialog.normalFail("Failed to create listen-server!", e, log);
 					return;
 				}
 				
@@ -396,9 +399,9 @@ public class LauncherScene extends JPanel implements IScene {
 				
 				lsrv.setServerListener(server);
 				qsrv.setServer(server);
-				
+
+				lsrv.listen(true);
 				qsrv.setActive(true);
-				
 				
 				// Refresh server list
 				refreshServerOverview();
