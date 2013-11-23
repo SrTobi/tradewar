@@ -4,24 +4,23 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 
 import net.miginfocom.swing.MigLayout;
-
-import javax.swing.JProgressBar;
-import javax.swing.JLabel;
-
-import tradewar.api.ISocket;
 import tradewar.app.Application;
 import tradewar.app.network.ConnectionBuilder;
+import tradewar.app.network.IProtocolListener;
 import tradewar.utils.log.Log;
 
 public class DialUpDialog extends JDialog {
+
+	private static final long serialVersionUID = 2303049258868397256L;
 
 	private Log log = new Log(Application.LOGSTREAM, "dailup-dlg");
 	private ConnectionBuilder builder;
@@ -36,39 +35,40 @@ public class DialUpDialog extends JDialog {
 		this.address = addr;
 		this.port = port;
 		
-		builder = new ConnectionBuilder(log.getStream(), addr, port) {
+		builder = new ConnectionBuilder(addr, port);
+		builder.addProtocolListener(new IProtocolListener() {
 			
 			@Override
-			public void onFailed(IOException e) {
+			public void onProtocolFail(Exception failure) {
 				DialUpDialog.this.dispose();
 				
-				ExceptionDialog.normalFail("Connection failed!", "Failed to connect to " + address + ":" + port, e, log);
+				ExceptionDialog.normalFail("Connection failed!", "Failed to connect to " + address + ":" + port, failure, log);
 			}
 			
 			@Override
-			public void onConnected(ISocket socket) {
+			public void onProtocolCompleteness() {
 				log.info("Connected!");
 				DialUpDialog.this.dispose();
 			}
 			
 			@Override
-			public void onCanceled() {
+			public void onProtocolAbort() {
 				log.err("Connection canceled!");
 				DialUpDialog.this.dispose();
 			}
-		};
+		});
 		
 		setup();
 		
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-		        builder.cancel();
+		        builder.abort();
 			}
 		});
 		
 		// Start connecting
-		builder.connect();
+		builder.invokeProtocol();
 	}
 	
 	public void setup() {
@@ -99,6 +99,8 @@ public class DialUpDialog extends JDialog {
 	
 	class CancelAction extends AbstractAction {
 
+		private static final long serialVersionUID = 8837039819400458762L;
+
 
 		public CancelAction() {
 			putValue(NAME, "Cancel");
@@ -108,7 +110,7 @@ public class DialUpDialog extends JDialog {
 		
 		@Override
 		public void actionPerformed(ActionEvent evt) {
-			builder.cancel();
+			builder.abort();
 			DialUpDialog.this.dispose();
 		}
 		

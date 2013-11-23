@@ -23,6 +23,7 @@ public class ConnectionSocket implements ISocket {
 	private Queue<IPacket> receivedPackets;
 	private ReceiverThread receiverThread;
 	private List<ISocketListener> listeners;
+	private boolean connected = true;
 	
 	private class ReceiverThread implements Runnable {
 
@@ -67,6 +68,9 @@ public class ConnectionSocket implements ISocket {
 				}
 			} catch(IOException e) {
 				log.excp(e);
+				if(connected) {
+					notfiyError(e);
+				}
 				
 			} finally {
 				close();
@@ -110,9 +114,14 @@ public class ConnectionSocket implements ISocket {
 	}
 
 	@Override
-	public synchronized void send(IPacket packet) throws IOException {
+	public synchronized void send(IPacket packet) {
 		notfiySend(packet);
-		out.writeObject(packet);
+		try {
+			out.writeObject(packet);
+		} catch (IOException e) {
+			notfiyError(e);
+			close();
+		}
 	}
 
 	@Override
@@ -172,18 +181,21 @@ public class ConnectionSocket implements ISocket {
 		if(!isConnected())
 			return;
 		
+		connected = false;
+		
 		try {
 			socket.close();
 		} catch (IOException e) {
 			log.excp(e);
 		}
-		
-		notfiyDisconnect();
+
 		socket = null;
+		notfiyDisconnect();
 	}
 	
-	private boolean isConnected() {
-		return socket != null;
+	@Override
+	public boolean isConnected() {
+		return socket != null && connected;
 	}
 
 	private void notfiySend(IPacket packet) {

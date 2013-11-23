@@ -1,6 +1,7 @@
 package tradewar.app.network;
 
 import java.io.IOException;
+import java.net.ProtocolException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.SynchronousQueue;
@@ -10,12 +11,15 @@ import tradewar.api.ILogStream;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.api.ISocket;
+import tradewar.app.Application;
+import tradewar.utils.HashedPassword;
 import tradewar.utils.log.Log;
 
 public class ListenServer implements IListenServer, Runnable {
 
 	private Log log;
 	private IServerStartParams ssparams;
+	private HashedPassword password;
 	private IServer server;
 	private ServerSocket listenSocket;
 	private boolean listening = false;
@@ -34,6 +38,15 @@ public class ListenServer implements IListenServer, Runnable {
 		
 		@Override
 		public void run() {
+			
+			try {
+				new ServersideHandshakeProtocol(socket, Application.APP_VERSION, password, false).executeProtocol();
+			} catch (Exception e) {
+				// Just throw him away!
+				log.excp(e);
+				return;
+			}
+			
 			while(true) {
 				socket.waitForPacket();
 			}
@@ -45,6 +58,7 @@ public class ListenServer implements IListenServer, Runnable {
 	public ListenServer(ILogStream logstream, IServerStartParams ssparams) throws IOException {
 		this.log = new Log(logstream, "listen-server");
 		this.ssparams = ssparams;
+		this.password = new HashedPassword(ssparams.getServerPassword());
 		eventQueue = new SynchronousQueue<Object>();
 		
 		listenSocket = new ServerSocket(ssparams.getGameServerPort());

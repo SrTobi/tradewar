@@ -25,6 +25,8 @@ import net.miginfocom.swing.MigLayout;
 
 public class ExceptionDialog extends JDialog {
 	
+	private static final long serialVersionUID = 6707133560891881692L;
+	
 	private Action sendAction = new SendAction();
 	private Action continueAction = new ContinueAction();
 
@@ -46,7 +48,8 @@ public class ExceptionDialog extends JDialog {
 		final Icon icon = UIManager.getIcon("OptionPane.errorIcon");
 		
 		JPanel panel = new JPanel() {
-			
+			private static final long serialVersionUID = -1716061904414871064L;
+
 			@Override
 		    protected void paintComponent(Graphics g) {
 		        super.paintComponent(g);
@@ -121,6 +124,8 @@ public class ExceptionDialog extends JDialog {
 	
 	private class SendAction extends AbstractAction {
 
+		private static final long serialVersionUID = 6103008783537561989L;
+
 		public SendAction() {
 			putValue(NAME, "Send");
 			putValue(SHORT_DESCRIPTION, "Send a report to the maintainer!");
@@ -133,6 +138,8 @@ public class ExceptionDialog extends JDialog {
 	}
 
 	private class ContinueAction extends AbstractAction {
+
+		private static final long serialVersionUID = -8757769261886428276L;
 
 		public ContinueAction() {
 			putValue(NAME, "Continue");

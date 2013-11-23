@@ -4,9 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import tradewar.api.IApp;
 import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
@@ -24,7 +21,10 @@ public class ModManager {
 	
 	private static final String CONFIG_MODLIST = "mod-list";
 
-	private class ExtendedModInfo implements IStartableModInfo {		
+	private class ExtendedModInfo implements IStartableModInfo {
+		private static final long serialVersionUID = 5167038344751835449L;
+		
+		
 		public String name;
 		public String description;
 		public String author;

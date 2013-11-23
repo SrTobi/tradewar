@@ -23,6 +23,10 @@ import tradewar.api.IVersion;
  */
 public final class Version implements IVersion {
 
+	private static final long serialVersionUID = 8625090398793201033L;
+	
+	
+	
 	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy");
 	public static final String VERSION_PATTERN = "\\d+\\.\\d+\\:.+";
 	

@@ -32,9 +32,13 @@ import tradewar.utils.IValidityChangeListener;
 import tradewar.utils.ValidityBackgroundChanger;
 
 public class ServerCreationDialog extends JDialog {
+	private static final long serialVersionUID = 2427292471730316929L;
+
 
 	private static class IModInfoRenderer extends DefaultListCellRenderer {
-	    public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus ) {
+		private static final long serialVersionUID = -293882292359629135L;
+
+		public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus ) {
 	        Object item = value;
 
 	        if( item instanceof IModInfo ) {
@@ -207,6 +211,8 @@ public class ServerCreationDialog extends JDialog {
 	}
 	
 	private class CreateServerAction extends AbstractAction {
+		private static final long serialVersionUID = -481275235997405043L;
+		
 		public CreateServerAction() {
 			putValue(NAME, "Create");
 			putValue(SHORT_DESCRIPTION, "Some short description");
@@ -220,6 +226,8 @@ public class ServerCreationDialog extends JDialog {
 	
 	
 	private class CancelServerCreationAction extends AbstractAction {
+		private static final long serialVersionUID = 7435773577905605217L;
+		
 		public CancelServerCreationAction() {
 			putValue(NAME, "Cancel");
 			putValue(SHORT_DESCRIPTION, "Some short description");

@@ -9,6 +9,9 @@ import tradewar.app.network.QueryResponse;
 
 public class GameOverviewModel extends AbstractTableModel {
 
+	private static final long serialVersionUID = 2992902886749532329L;
+
+
 	static final String[] COLUMN_NAMES = new String[] {"Server", "Mod", "Passwort", "Spieler", "Ip"};
 
 	

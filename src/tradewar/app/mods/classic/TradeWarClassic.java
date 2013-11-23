@@ -20,6 +20,8 @@ public class TradeWarClassic implements IMod {
 
 	public static final IStartableModInfo INST = new IStartableModInfo() {
 		
+		private static final long serialVersionUID = 876940535315583183L;
+
 		@Override
 		public String getVersion() {
 			return MODINFO_VERSION;

@@ -265,6 +265,8 @@ public class LauncherScene extends JPanel implements IScene {
 	}
 
 	private class QuitAction extends AbstractAction {
+		private static final long serialVersionUID = 3327116291089676537L;
+		
 		public QuitAction() {
 			putValue(NAME, "Quit");
 			putValue(SHORT_DESCRIPTION, "Quit the application");
@@ -279,6 +281,9 @@ public class LauncherScene extends JPanel implements IScene {
 	
 	
 	private class EnableQueryServerPortInputAction extends AbstractAction {
+		private static final long serialVersionUID = 1370696178527816012L;
+		
+
 		public EnableQueryServerPortInputAction() {
 			putValue(NAME, "");
 			putValue(SHORT_DESCRIPTION, "Enables the port for the server hook!");
@@ -296,6 +301,8 @@ public class LauncherScene extends JPanel implements IScene {
 	}
 
 	private class RefreshServerOverviewAction extends AbstractAction{
+		private static final long serialVersionUID = -715661177118796967L;
+
 		public RefreshServerOverviewAction() {
 			putValue(NAME, "Refresh");
 			putValue(SHORT_DESCRIPTION, "Searches for game servers.");
@@ -308,6 +315,8 @@ public class LauncherScene extends JPanel implements IScene {
 	
 
 	private class ConnectAction extends AbstractAction {
+		private static final long serialVersionUID = 3031992177067402722L;
+
 		public ConnectAction() {
 			putValue(NAME, "Connect");
 			putValue(SHORT_DESCRIPTION, "Connect to a server.");
@@ -329,6 +338,8 @@ public class LauncherScene extends JPanel implements IScene {
 	}
 
 	private class DirectConnectAction extends AbstractAction {
+		private static final long serialVersionUID = -5707279426574384186L;
+
 		public DirectConnectAction() {
 			putValue(NAME, "Direct Connect");
 			putValue(SHORT_DESCRIPTION, "Connect to a server.");
@@ -367,6 +378,8 @@ public class LauncherScene extends JPanel implements IScene {
 	}
 	
 	private class CreateServerAction extends AbstractAction {
+		private static final long serialVersionUID = -4139389592204765489L;
+
 		public CreateServerAction() {
 			putValue(NAME, "Server");
 			putValue(SHORT_DESCRIPTION, "Open server creation dialog.");

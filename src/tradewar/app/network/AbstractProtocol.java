@@ -3,69 +3,121 @@ package tradewar.app.network;
 import java.util.ArrayList;
 import java.util.List;
 
-import tradewar.api.IPacket;
-import tradewar.api.ISocket;
 import tradewar.app.Application;
+import tradewar.utils.log.Log;
 
-public abstract class AbstractProtocol<Protocol> implements Runnable {
+public abstract class AbstractProtocol {
 
-	private ISocket socket;
-	private PacketDistributor distributor;
-	private List<IProtocolListener<Protocol>> listeners = new ArrayList<>();
-	private int timeout = 5000;
-	
-	public AbstractProtocol(ISocket socket) {
-		this.socket = socket;
-		this.distributor = new PacketDistributor(Application.LOGSTREAM);
+	public enum ProtocolState {
+		Ready,
+		Running,
+		Completed,
+		Failed,
+		Aborted
 	}
 	
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
+	protected Log log = new Log(Application.LOGSTREAM, "protocol");
+	private List<IProtocolListener> listeners = new ArrayList<>();
+	private ProtocolState state = ProtocolState.Ready;
 	
-	public void addProtocolListener(IProtocolListener<Protocol> listener) {
+	public void addProtocolListener(IProtocolListener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeProtocolListener(IProtocolListener<Protocol> listener) {
+	public void removeProtocolListener(IProtocolListener listener) {
 		listeners.remove(listener);
 	}
-	
-	protected void notifyProtocolFail(Protocol protocol) {
-		for(IProtocolListener<Protocol> listener : listeners) {
-			listener.onProtocolFail(protocol);
+
+	public void executeProtocol() throws Exception {
+		if(started()) {
+			throw new IllegalStateException("Protocol already started!");
 		}
+		state = ProtocolState.Running;
+
+		startProtocol();
 	}
 
-	protected void notifyProtocolComplete(Protocol protocol) {
-		for(IProtocolListener<Protocol> listener : listeners) {
-			listener.onProtocolCompleted(protocol);
+	public void invokeProtocol() {
+		if(started()) {
+			throw new IllegalStateException("Protocol already started!");
 		}
-	}
-	
-	protected void startProtocol() {
-		new Thread(this).start();
-	}
-	
-	protected PacketDistributor getDistributor() {
-		return distributor;
-	}
-
-	@Override
-	public void run() {
+		state = ProtocolState.Running;
 		
-		while(!protocolFinished()) {
+		new Thread(new Runnable() {
 			
-			IPacket packet = socket.waitForPacket(timeout);
-			
-			if(packet == null) {
-				break;
+			@Override
+			public void run() {
+				try {
+					startProtocol();
+				} catch (Exception e) {
+					log.err("Protocol failed: " + e.getMessage());
+				}
+			}
+		}).start();
+	}
+	
+	public void abort() {
+		state = ProtocolState.Aborted;
+		notifyProtocolAbort();
+	}
+	
+	public boolean started() {
+		return state != ProtocolState.Ready;
+	}
+	
+	public boolean aborted() {
+		return state == ProtocolState.Aborted;
+	}
+	
+	public boolean completed() {
+		return state == ProtocolState.Completed;
+	}
+
+	public boolean failed() {
+		return state == ProtocolState.Failed;
+	}
+	
+	public ProtocolState getState() {
+		return state;
+	}
+	
+	
+	protected void notifyProtocolFail(Exception failure) {
+		for(IProtocolListener listener : listeners) {
+			listener.onProtocolFail(failure);
+		}
+	}
+
+	protected void notifyProtocolCompleteness() {
+		for(IProtocolListener listener : listeners) {
+			listener.onProtocolCompleteness();
+		}
+	}
+	
+
+	protected void notifyProtocolAbort() {
+		for(IProtocolListener listener : listeners) {
+			listener.onProtocolAbort();
+		}
+	}
+	
+	private void startProtocol() throws Exception {
+		
+		try {
+			handleProtocol();
+			if(!aborted()) {
+				state = ProtocolState.Completed;
+				notifyProtocolCompleteness();
+			}
+		} catch(Exception e) {
+			if(!aborted()) {
+				state = ProtocolState.Failed;
+				notifyProtocolFail(e);
 			}
 			
-			distributor.distribute(packet);
+			throw e;
 		}
-		
 	}
 	
-	protected abstract boolean protocolFinished();
+	protected abstract void handleProtocol() throws Exception;
 }

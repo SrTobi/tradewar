@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import tradewar.api.ILogStream;
 import tradewar.api.IPacket;
-import tradewar.api.ISocket;
 import tradewar.utils.log.Log;
 
 public class PacketDistributor {
@@ -18,7 +17,7 @@ public class PacketDistributor {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public void execute(IPacket packet) {
+		public void execute(IPacket packet) throws Exception {
 			handler.onPacket((PacketType)packet);
 		}
 	}
@@ -42,7 +41,7 @@ public class PacketDistributor {
 		handlers.remove(handler);
 	}
 	
-	public boolean distribute(IPacket packet) {
+	public boolean distribute(IPacket packet) throws Exception {
 
 		PacketExecutor<?> exec = handlers.get(packet.getClass());
 		
@@ -56,7 +55,7 @@ public class PacketDistributor {
 		return true;
 	}
 	
-	public int distributeAll(Collection<IPacket> packets) {
+	public int distributeAll(Collection<IPacket> packets) throws Exception {
 		int num = 0;
 
 		for(IPacket packet : packets) {

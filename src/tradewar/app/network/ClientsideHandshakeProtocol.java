@@ -1,66 +1,97 @@
 package tradewar.app.network;
 
-import tradewar.api.ISocket;
-import tradewar.app.Application;
-import tradewar.app.network.packets.PacketSendAppVersion;
+import java.net.ProtocolException;
 
-public class ClientsideHandshakeProtocol extends AbstractProtocol<ClientsideHandshakeProtocol> {
+import tradewar.api.ISocket;
+import tradewar.api.IVersion;
+import tradewar.app.network.packets.SendClientHandshakePacket;
+import tradewar.app.network.packets.SendServerHandshakePacket;
+
+public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 
 	private ISocket socket;
-	private static final int FEATURE_APP_VERSION = 0;
+	private IVersion serverVersion = null;
+	private boolean passwordIncorrect = false;
+	private boolean tooManyPlayer = false;
+	private boolean accepted = false;
 	
-	boolean[] protocolFeatures = new boolean[1];
 	
-	
-	public ClientsideHandshakeProtocol(ISocket socket) {
+	public ClientsideHandshakeProtocol(ISocket socket, String nickname, String password) {
 		super(socket);
 		
 		this.socket = socket;
+
+
+		PacketDistributor d = getDistributor();
 		
-		for(int i = 0; i < protocolFeatures.length; ++i) {
-			protocolFeatures[i] = false;
-		}
+		d.addPacketHandler(appVersionHandler);
 		
-		getDistributor().addPacketHandler(appVersionHandler);
-		
-		startProtocol();
+		sendCliendHandshake(nickname, password);
 	}
 	
-	private IPacketHandler<PacketSendAppVersion> appVersionHandler = new IPacketHandler<PacketSendAppVersion>() {
+	public IVersion getServerVersion() {
+		return serverVersion;
+	}
+	
+	public boolean isPasswordIncorrect() {
+		return passwordIncorrect;
+	}
+	
+	public boolean isServesrFull() {
+		return tooManyPlayer;
+	}
+	
+	private IPacketHandler<SendServerHandshakePacket> appVersionHandler = new IPacketHandler<SendServerHandshakePacket>() {
 		
 		@Override
-		public void onPacket(PacketSendAppVersion packet) {
-			
-			if(protocolFeatures[FEATURE_APP_VERSION])
-				return;
-			
-			if(packet.appVersion.isNewerThen(Application.APP_VERSION)) {
-				// New version available!
+		public void onPacket(SendServerHandshakePacket packet) throws ProtocolException {
+
+			serverVersion = packet.serverAppVersion;
+
+			if(!packet.passwordCorrect) {
+				passwordIncorrect = true;
+			}
+
+			if(packet.tooManyPlayer) {
+				tooManyPlayer = true;
 			}
 			
-			if(!Application.APP_VERSION.isCompatible(packet.appVersion)) {
-				// Versions are not compatible
-			}
+			accepted = packet.accepted;
 			
-			protocolFeatures[FEATURE_APP_VERSION] = true;
+			if(!accepted) {
+				throw new ProtocolException("Handshake with server failed!");
+			}
 		}
 		
+		/*private void checkVersion(IVersion srvVersion) {
+			
+			if(srvVersion.isNewerThen(Application.APP_VERSION)) {
+				// New version available!
+				throw new NotImplementedError();
+			}
+			
+			if(!Application.APP_VERSION.isCompatible(srvVersion)) {
+				// Versions are not compatible
+				throw new NotImplementedError();
+			}
+		}*/
+		
 		@Override
-		public Class<PacketSendAppVersion> getPacketClass() {
-			return PacketSendAppVersion.class;
+		public Class<SendServerHandshakePacket> getPacketClass() {
+			return SendServerHandshakePacket.class;
 		}
 	};
 	
+	private void sendCliendHandshake(String nickname, String password) {
+		SendClientHandshakePacket packet = new SendClientHandshakePacket(nickname, password);
+		
+		socket.send(packet);
+	}
 
 	@Override
-	protected boolean protocolFinished() {
-
-		for(int i = 0; i < protocolFeatures.length; ++i) {
-			if(!protocolFeatures[i])
-				return false;
-		}
+	protected boolean isProtocolCompleted() {
 		
-		return true;
+		return accepted;
 	}
 	
 	
