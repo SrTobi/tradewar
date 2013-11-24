@@ -11,9 +11,12 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
+import tradewar.api.IListenServer;
 import tradewar.app.Application;
+import tradewar.app.network.ClientsideHandshakeProtocol;
 import tradewar.app.network.ConnectionBuilder;
 import tradewar.app.network.IProtocolListener;
 import tradewar.utils.log.Log;
@@ -24,13 +27,18 @@ public class DialUpDialog extends JDialog {
 
 	private Log log = new Log(Application.LOGSTREAM, "dailup-dlg");
 	private ConnectionBuilder builder;
+	private ClientsideHandshakeProtocol handshakeProtocol;
+	private IProtocolListener handshakeListener;
+	
+	private String password = "";
 	
 	private int port;
 	private String address;
 	
 	private Action cancelAction = new CancelAction();
+	private JLabel lblStatusLabel;
 	
-	public DialUpDialog(String addr, final int port) {
+	public DialUpDialog(String addr, final String nickname, final int port) {
 		
 		this.address = addr;
 		this.port = port;
@@ -48,7 +56,18 @@ public class DialUpDialog extends JDialog {
 			@Override
 			public void onProtocolCompleteness() {
 				log.info("Connected!");
-				DialUpDialog.this.dispose();
+				
+				SwingUtilities.invokeLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						lblStatusLabel.setText("Login...");
+					}
+				});
+				
+				handshakeProtocol = new ClientsideHandshakeProtocol(builder.getConnection(), nickname, password);
+				handshakeProtocol.addProtocolListener(handshakeListener);
+				handshakeProtocol.invokeProtocol();
 			}
 			
 			@Override
@@ -57,6 +76,26 @@ public class DialUpDialog extends JDialog {
 				DialUpDialog.this.dispose();
 			}
 		});
+		
+		handshakeListener = new IProtocolListener() {
+			
+			@Override
+			public void onProtocolFail(Exception failure) {
+				// failed
+			}
+			
+			@Override
+			public void onProtocolCompleteness() {
+				log.info("Login!");
+				DialUpDialog.this.dispose();
+			}
+			
+			@Override
+			public void onProtocolAbort() {
+				log.err("Login canceled!");
+				DialUpDialog.this.dispose();
+			}
+		};
 		
 		setup();
 		
@@ -80,8 +119,8 @@ public class DialUpDialog extends JDialog {
 		setMinimumSize(new Dimension(400, 120));
 		getContentPane().setLayout(new MigLayout("", "[66.00,grow][]", "[grow][25px:n][grow]"));
 		
-		JLabel lblNewLabel = new JLabel("Connecting to " + address + ", Port " + port);
-		getContentPane().add(lblNewLabel, "cell 0 0 2 1,growx,aligny center");
+		lblStatusLabel = new JLabel("Connecting to " + address + ", Port " + port);
+		getContentPane().add(lblStatusLabel, "cell 0 0 2 1,growx,aligny center");
 		
 		JProgressBar progressBar = new JProgressBar();
 		progressBar.setIndeterminate(true);

@@ -332,7 +332,7 @@ public class LauncherScene extends JPanel implements IScene {
 			
 		 	QueryResponse r = gameOverviewModel.getRowData(row);
 		 	
-		 	DialUpDialog dlg = new DialUpDialog(r.getServerAddress(), r.getServerPort());
+		 	DialUpDialog dlg = new DialUpDialog(r.getServerAddress(), nicknameInput.getText(), r.getServerPort());
 			dlg.setVisible(true);
 		}
 	}
@@ -371,7 +371,7 @@ public class LauncherScene extends JPanel implements IScene {
 					
 				}
 				
-			 	DialUpDialog dlg = new DialUpDialog(ip, port);
+			 	DialUpDialog dlg = new DialUpDialog(ip, nicknameInput.getText(), port);
 				dlg.setVisible(true);
 			}
 		}

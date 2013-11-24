@@ -11,12 +11,17 @@ public abstract class AbstractSocketProtocol extends AbstractProtocol {
 
 	private ISocket socket;
 	private PacketDistributor distributor;
+	private boolean timeout = false;
 	
 	public AbstractSocketProtocol(ISocket socket) {
 		this.socket = socket;
 		this.distributor = new PacketDistributor(Application.LOGSTREAM);
 	}
 
+	public boolean hadTimeout() {
+		return timeout;
+	}
+	
 	protected PacketDistributor getDistributor() {
 		return distributor;
 	}
@@ -38,6 +43,7 @@ public abstract class AbstractSocketProtocol extends AbstractProtocol {
 				int newTimeout = getTimeout();
 				
 				if(newTimeout <= timeout) {
+					this.timeout = true;
 					throw new TimeoutException("Protocol timeout! Protocol was handled to slow!");
 				}
 				

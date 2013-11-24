@@ -39,12 +39,20 @@ public class ListenServer implements IListenServer, Runnable {
 		@Override
 		public void run() {
 			
-			try {
-				new ServersideHandshakeProtocol(socket, Application.APP_VERSION, password, false).executeProtocol();
-			} catch (Exception e) {
-				// Just throw him away!
-				log.excp(e);
-				return;
+			boolean again = true;
+			boolean tooManyPlayer = false;
+			
+			while(again) {
+				try {
+					new ServersideHandshakeProtocol(socket, Application.APP_VERSION, password, tooManyPlayer).executeProtocol();
+					again = false;
+				} catch (Exception e) {				
+					// Just throw him away!
+					log.excp(e);
+					
+					if(tooManyPlayer)
+						return;
+				}
 			}
 			
 			while(true) {

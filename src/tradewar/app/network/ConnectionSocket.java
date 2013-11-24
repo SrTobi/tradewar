@@ -55,7 +55,10 @@ public class ConnectionSocket implements ISocket {
 						if(packet.check()) {
 							notfiyReceive(packet);
 							receivedPackets.add(packet);
-							ConnectionSocket.this.notify();
+							
+							synchronized (ConnectionSocket.this) {
+								ConnectionSocket.this.notify();
+							}
 						}else{
 							log.err("Packet contained invalid data!");
 						}

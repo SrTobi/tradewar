@@ -41,9 +41,10 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 			
 			if(passwordCorrect && !tooManyPlayer) {
 				accepted = true;
-				log.info("But server is full!");
 			}else{
 				log.info("Password is " + (passwordCorrect? "correct" : "incorrect") + "!");
+				if(tooManyPlayer)
+					log.info("But server is full!");
 			}
 			
 			if(!accepted) {
