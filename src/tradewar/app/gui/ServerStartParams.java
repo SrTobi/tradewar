@@ -1,6 +1,8 @@
 package tradewar.app.gui;
 
+import tradewar.api.IModInfo;
 import tradewar.api.IServerStartParams;
+import tradewar.utils.HashedPassword;
 
 class ServerStartParams implements IServerStartParams {
 
@@ -8,16 +10,25 @@ class ServerStartParams implements IServerStartParams {
 	private int gameServerPort;
 	private int queryServerPort;
 	private String serverName;
-	private String serverPassword;
+	private HashedPassword serverPassword;
 	private int maxPlayer;
+	private IModInfo modinfo;
 	
 	
 	public ServerStartParams(ServerCreationDialog dlg) {
 		gameServerPort = dlg.getGameServerPort();
 		queryServerPort = dlg.getQueryServerPort();
 		serverName = dlg.getServerName();
-		serverPassword = dlg.getServerPassword();
+		
+		String enteredPassword = dlg.getServerPassword();
+		if(enteredPassword == null || enteredPassword.isEmpty()) {
+			serverPassword = null;
+		} else {
+			serverPassword = HashedPassword.fromHash(enteredPassword);
+		}
 		maxPlayer = dlg.getMaxPlayer();
+		
+		modinfo = dlg.getSelectedMod();
 	}
 
 	@Override
@@ -36,13 +47,22 @@ class ServerStartParams implements IServerStartParams {
 	}
 
 	@Override
-	public String getServerPassword() {
-		return serverPassword;
+	public byte[] getHashedServerPassword() {
+		if(serverPassword == null) {
+			return null;
+		} else {
+			return serverPassword.getHashedPassword();
+		}
 	}
 
 	@Override
 	public int getMaxPlayer() {
 		return maxPlayer;
+	}
+
+	@Override
+	public IModInfo getMod() {
+		return modinfo;
 	}
 
 }

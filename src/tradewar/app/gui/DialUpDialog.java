@@ -19,6 +19,7 @@ import tradewar.app.Application;
 import tradewar.app.network.ClientsideHandshakeProtocol;
 import tradewar.app.network.ConnectionBuilder;
 import tradewar.app.network.IProtocolListener;
+import tradewar.utils.HashedPassword;
 import tradewar.utils.log.Log;
 
 public class DialUpDialog extends JDialog {
@@ -65,7 +66,7 @@ public class DialUpDialog extends JDialog {
 					}
 				});
 				
-				handshakeProtocol = new ClientsideHandshakeProtocol(builder.getConnection(), nickname, password);
+				handshakeProtocol = new ClientsideHandshakeProtocol(builder.getConnection(), nickname, HashedPassword.fromClean(password));
 				handshakeProtocol.addProtocolListener(handshakeListener);
 				handshakeProtocol.invokeProtocol();
 			}

@@ -2,6 +2,7 @@ package tradewar.app.network;
 
 import java.text.ParseException;
 
+import tradewar.api.IServerStartParams;
 import tradewar.app.FormatPatterns;
 
 
@@ -74,14 +75,14 @@ public final class QueryResponse {
 		return line;
 	}
 	
-	public QueryResponse(String serverName, String modification, boolean password, int maxPassword, int playerCount, int maxPlayer, String serverAddress, int serverPort) {
-		this.serverName = serverName;
-		this.modification = modification;
-		this.password = password;
+	public QueryResponse(IServerStartParams ssparams, String serverAddress, int playerCount) {
+		this.serverName = ssparams.getServerName();
+		this.modification = ssparams.getMod().getName();
+		this.password = ssparams.getHashedServerPassword() != null;
 		this.playerCount = playerCount;
-		this.maxPlayer = maxPlayer;
+		this.maxPlayer = ssparams.getMaxPlayer();
 		this.serverAddress = serverAddress;
-		this.serverPort = serverPort;
+		this.serverPort = ssparams.getGameServerPort();
 	}
 	
 	public String getServerName() {

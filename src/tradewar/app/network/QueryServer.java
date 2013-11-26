@@ -113,14 +113,7 @@ public class QueryServer implements IQueryServer, Runnable {
 	
 	private QueryResponse createResponse() {
 
-		QueryResponse response = new QueryResponse(	ssparams.getServerName(),
-													null,
-													!ssparams.getServerPassword().isEmpty(),
-													0,
-													server.getPlayerCount(),
-													ssparams.getMaxPlayer(),
-													serverAddr,
-													ssparams.getGameServerPort());
+		QueryResponse response = new QueryResponse(ssparams, serverAddr,server.getPlayerCount());
 		
 		return response;
 	}

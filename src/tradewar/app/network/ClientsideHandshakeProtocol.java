@@ -6,6 +6,7 @@ import tradewar.api.ISocket;
 import tradewar.api.IVersion;
 import tradewar.app.network.packets.SendClientHandshakePacket;
 import tradewar.app.network.packets.SendServerHandshakePacket;
+import tradewar.utils.HashedPassword;
 
 public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 
@@ -16,7 +17,7 @@ public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 	private boolean accepted = false;
 	
 	
-	public ClientsideHandshakeProtocol(ISocket socket, String nickname, String password) {
+	public ClientsideHandshakeProtocol(ISocket socket, String nickname, HashedPassword password) {
 		super(socket);
 		
 		this.socket = socket;
@@ -82,7 +83,7 @@ public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 		}
 	};
 	
-	private void sendCliendHandshake(String nickname, String password) {
+	private void sendCliendHandshake(String nickname, HashedPassword password) {
 		SendClientHandshakePacket packet = new SendClientHandshakePacket(nickname, password);
 		
 		socket.send(packet);

@@ -1,43 +1,26 @@
 package tradewar.utils;
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class HashedPassword implements Serializable {
 
 	private static final long serialVersionUID = 8064407991169805487L;
 	
-	
-	private static final Charset UTF8_CHARSET;
-	private static final MessageDigest SHA256_DIGIST;
-	
-	static {
-		try {
-			UTF8_CHARSET = Charset.forName("UTF-8"); 
-	    } catch (UnsupportedCharsetException | IllegalCharsetNameException e) {
-			throw new NotImplementedError("No UTF-8 support! [" + e.getMessage() + "]", e);
-	    }
-    
-		try {
-			SHA256_DIGIST = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e) {
-			throw new NotImplementedError("No SHA-256 support!", e);
-		}
-	}
-	
 	private final byte[] hashedPassword;
 	
-	public HashedPassword(String clearPassword) {
-		hashedPassword = hash(clearPassword);
+	private HashedPassword(byte[] hashedPassword) {
+		this.hashedPassword = hashedPassword;
 	}
 
 	
 	public byte[] getHashedPassword() {
 		return hashedPassword;
+	}
+	
+	@Override
+	public String toString() {
+		return new String(getHashedPassword());
 	}
 	
 	@Override
@@ -57,14 +40,34 @@ public class HashedPassword implements Serializable {
 			hashedpw = ((HashedPassword) other).getHashedPassword();
 		} else if (other instanceof byte[]) {
 			hashedpw = (byte[]) other;
+		} else if (other instanceof String) {
+			hashedpw = ((String) other).getBytes();
 		}
 
 		return hashedpw != null && MessageDigest.isEqual(hashedPassword, hashedpw);
 	}
 	
-	private byte[] hash(String clearString) {
-		byte[] bytes = clearString.getBytes(UTF8_CHARSET);
+	private static byte[] hash(String clearString) {
+		return Hasher.hash(clearString);
+	}
+	
+	public static HashedPassword fromClean(String cleanString) {
+		return new HashedPassword(hash(cleanString));
+	}
 
-		return SHA256_DIGIST.digest(bytes);
+	public static HashedPassword fromHash(String hashedString) {
+		if(!hashedString.matches(Hasher.HASH_PATTERN)) {
+			throw new IllegalArgumentException("hashedString does not contain a hash!");
+		}
+		
+		return new HashedPassword(hashedString.getBytes());
+	}
+
+	public static HashedPassword fromHash(byte[] hashedBytes) {
+		if(!new String(hashedBytes).matches(Hasher.HASH_PATTERN)) {
+			throw new IllegalArgumentException("hashedString does not contain a hash!");
+		}
+		
+		return new HashedPassword(hashedBytes);
 	}
 }

@@ -11,9 +11,16 @@ import tradewar.api.IApp;
 import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
 import tradewar.api.ILogStream;
+import tradewar.api.IMod;
+import tradewar.api.IModInfo;
 import tradewar.api.ISceneFrame;
+import tradewar.api.IServer;
+import tradewar.api.IServerStartParams;
 import tradewar.app.gui.ApplicationWindow;
+import tradewar.app.gui.ExceptionDialog;
 import tradewar.app.gui.LauncherScene;
+import tradewar.app.network.ListenServer;
+import tradewar.app.network.QueryServer;
 import tradewar.utils.Version;
 import tradewar.utils.log.Log;
 
@@ -85,6 +92,46 @@ public class Application implements IApp, Runnable {
 		mainWin.setVisible(true);
 	}
 
+	public void startServer(IServerStartParams ssparams) throws AppException {
+
+		IModInfo modInfo = ssparams.getMod();
+
+		log.info("Create Server \"" + ssparams.getServerName() + "\"!");
+
+		ListenServer lsrv;
+		try {
+			lsrv = new ListenServer(log.getStream(), ssparams);
+		} catch (IOException e) {
+			throw new AppException("Failed to create listen-server!", e);
+		}
+		
+		QueryServer qsrv = new QueryServer(ssparams);
+		
+		IMod mod = modManager.startMod(modInfo);
+
+		if(mod == null) {
+			throw new AppException("Failed to start modification!");
+		}
+		
+		
+		IServer server = mod.createDedicatedServer(ssparams, lsrv, qsrv);
+
+		if(server == null) {
+			throw new AppException("Failed to start server!");
+		}
+		
+		
+		lsrv.setServerListener(server);
+		qsrv.setServer(server);
+
+		lsrv.listen(true);
+		qsrv.setActive(true);
+		
+	}
+
+	public void connectToServer() {
+		
+	}
 
 	@Override
 	public ILogStream getLogStream() {

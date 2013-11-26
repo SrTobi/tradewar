@@ -9,6 +9,7 @@ import tradewar.api.IQueryServer;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.IStartableModInfo;
+import tradewar.utils.AbstractInnerModInfo;
 
 public class TradeWarClassic implements IMod {
 	
@@ -18,42 +19,13 @@ public class TradeWarClassic implements IMod {
 	public static final String MODINFO_VERSION = "0.0.0.1";
 	public static final String MODINFO_UID = "Tradewar-Classic";
 
-	public static final IStartableModInfo INST = new IStartableModInfo() {
-		
-		private static final long serialVersionUID = 876940535315583183L;
-
-		@Override
-		public String getVersion() {
-			return MODINFO_VERSION;
-		}
-		
-		@Override
-		public String getName() {
-			return MODINFO_NAME;
-		}
-		
-		@Override
-		public String getDescription() {
-			return MODINFO_DESC;
-		}
-		
-		@Override
-		public String getAuthor() {
-			return MODINFO_AUTHOR;
-		}
+	public static final IStartableModInfo INST = new AbstractInnerModInfo(MODINFO_NAME, MODINFO_DESC, MODINFO_AUTHOR, MODINFO_VERSION) {
 		
 		@Override
 		public IMod instantiate() {
 			return new TradeWarClassic();
 		}
-
-		@Override
-		public String getUID() {
-			return MODINFO_UID;
-		}
 	};
-	
-	
 	
 	
 	

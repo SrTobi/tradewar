@@ -32,6 +32,7 @@ import tradewar.api.IModInfo;
 import tradewar.api.IScene;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
+import tradewar.app.AppException;
 import tradewar.app.Application;
 import tradewar.app.FormatPatterns;
 import tradewar.app.ModManager;
@@ -51,7 +52,7 @@ public class LauncherScene extends JPanel implements IScene {
 	private static final long serialVersionUID = 4078132421255645474L;
 	
 	private Log log = new Log(Application.LOGSTREAM, "launcher-scene");
-	private IApp app;
+	private Application app;
 	private ModManager modManager;
 	private IConfig config;
 	
@@ -81,7 +82,7 @@ public class LauncherScene extends JPanel implements IScene {
 	/**
 	 * Create the panel.
 	 */
-	public LauncherScene(IApp app, IConfig config, ModManager modManager, int standardGameServerPort, int standardQueryServerPort) {
+	public LauncherScene(Application app, IConfig config, ModManager modManager, int standardGameServerPort, int standardQueryServerPort) {
 		
 		this.app = app;
 		this.config = config;
@@ -378,7 +379,7 @@ public class LauncherScene extends JPanel implements IScene {
 	}
 	
 	private class CreateServerAction extends AbstractAction {
-		private static final long serialVersionUID = -4139389592204765489L;
+		private static final long serialVersionUID = -413938^9592204765489L;
 
 		public CreateServerAction() {
 			putValue(NAME, "Server");
@@ -399,36 +400,14 @@ public class LauncherScene extends JPanel implements IScene {
 			ServerCreationDialog scdlg = new ServerCreationDialog(config.getSubConfig("server-creation-dlg.cfg"), mods, standardGameServerPort, standardQueryServerPort);
 			
 			if(scdlg.showDialog()) {
-				log.debug("Create Server dialog closed successfully!");
-				
-				IModInfo modInfo = scdlg.getSelectedMod();
+
 				IServerStartParams ssparams = scdlg.getStartParams();
 				
-
-				ListenServer lsrv;
 				try {
-					lsrv = new ListenServer(log.getStream(), ssparams);
-				} catch (IOException e) {
-					ExceptionDialog.normalFail("Failed to create listen-server!", e, log);
-					return;
+					app.startServer(ssparams);
+				} catch (AppException e) {
+					ExceptionDialog.critFail(e.getMessage(), e, log);
 				}
-				
-				QueryServer qsrv = new QueryServer(ssparams);
-				
-				IMod mod = modManager.startMod(modInfo);
-				IServer server = mod.createDedicatedServer(ssparams, lsrv, qsrv);
-				
-				
-				if(server == null) {
-					log.crit("Failed to start modification!");
-					return;
-				}
-				
-				lsrv.setServerListener(server);
-				qsrv.setServer(server);
-
-				lsrv.listen(true);
-				qsrv.setActive(true);
 				
 				// Refresh server list
 				refreshServerOverview();

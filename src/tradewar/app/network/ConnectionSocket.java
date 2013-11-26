@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
 import tradewar.api.ILogStream;
 import tradewar.api.IPacket;
 import tradewar.api.ISocket;
@@ -118,6 +119,14 @@ public class ConnectionSocket implements ISocket {
 
 	@Override
 	public synchronized void send(IPacket packet) {
+		if(packet == null) {
+			throw new NullPointerException("packet must not be null!");
+		}
+		
+		if(!packet.check()) {
+			throw new IllegalArgumentException("Packet is not valid!");
+		}
+		
 		notfiySend(packet);
 		try {
 			out.writeObject(packet);

@@ -10,14 +10,14 @@ public class SendClientHandshakePacket implements IPacket {
 
 
 	public final String nickname;
-	public final HashedPassword hashedPassword;
+	public final byte[] hashedPassword;
 	
 	
 	
 	
-	public SendClientHandshakePacket(String nickname, String clearPassword) {
+	public SendClientHandshakePacket(String nickname, HashedPassword hashedPassword) {
 		this.nickname = nickname;
-		this.hashedPassword = new HashedPassword(clearPassword);
+		this.hashedPassword = hashedPassword.getHashedPassword();
 	}
 	
 	
@@ -29,7 +29,6 @@ public class SendClientHandshakePacket implements IPacket {
 	@Override
 	public boolean check() {
 
-		return	nickname != null && nickname.matches(FormatPatterns.NICKNAME)
-			 && hashedPassword != null;
+		return	nickname != null && nickname.matches(FormatPatterns.NICKNAME);
 	}
 }

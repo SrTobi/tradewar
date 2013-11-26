@@ -6,5 +6,4 @@ import tradewar.api.IModInfo;
 public interface IStartableModInfo extends IModInfo {
 
 	public IMod instantiate();
-	public String getUID();
 }

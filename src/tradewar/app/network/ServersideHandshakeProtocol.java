@@ -2,27 +2,28 @@ package tradewar.app.network;
 
 import java.net.ProtocolException;
 
+import tradewar.api.IServerStartParams;
 import tradewar.api.ISocket;
 import tradewar.api.IVersion;
 import tradewar.app.network.packets.SendClientHandshakePacket;
 import tradewar.app.network.packets.SendServerHandshakePacket;
-import tradewar.utils.HashedPassword;
+import tradewar.utils.Hasher;
 
 public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 
 	private boolean accepted = false;
 	private ISocket socket;
-	private HashedPassword password;
 	private boolean tooManyPlayer;
 	private IVersion serverVersion;
+	private IServerStartParams ssparams;
 	
-	public ServersideHandshakeProtocol(ISocket socket, IVersion serverVersion, HashedPassword password, boolean tooManyPlayer) {
+	public ServersideHandshakeProtocol(ISocket socket, IVersion serverVersion, IServerStartParams ssparams, boolean tooManyPlayer) {
 		super(socket);
 		
 		this.socket = socket;
 		this.serverVersion = serverVersion;
 		this.tooManyPlayer = tooManyPlayer;
-		this.password = password;
+		this.ssparams = ssparams;
 		
 		getDistributor().addPacketHandler(cliendHandshakeHandler);
 	}
@@ -34,8 +35,8 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 		public void onPacket(SendClientHandshakePacket packet) throws ProtocolException {
 
 			log.info("New player[" + packet.nickname + "] connected...");
-			
-			boolean passwordCorrect = password.equals(packet.hashedPassword);
+
+			boolean passwordCorrect = ssparams.getHashedServerPassword() == null || Hasher.isEqual(ssparams.getHashedServerPassword(), packet.hashedPassword);
 			
 			sendHandshakeResponse(passwordCorrect);
 			
@@ -45,6 +46,10 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 				log.info("Password is " + (passwordCorrect? "correct" : "incorrect") + "!");
 				if(tooManyPlayer)
 					log.info("But server is full!");
+			}
+			
+			if(!passwordCorrect) {
+				throw new SecurityException("Wrong password!");
 			}
 			
 			if(!accepted) {
@@ -59,7 +64,7 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 	};
 	
 	private void sendHandshakeResponse(boolean passwordCorrect) {
-		SendServerHandshakePacket packet = new SendServerHandshakePacket(serverVersion, passwordCorrect, tooManyPlayer);
+		SendServerHandshakePacket packet = new SendServerHandshakePacket(serverVersion, passwordCorrect, tooManyPlayer, ssparams);
 		
 		socket.send(packet);
 	}

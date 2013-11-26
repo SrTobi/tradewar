@@ -3,12 +3,15 @@ package tradewar.app;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
+
 import tradewar.api.IApp;
 import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
 import tradewar.api.IMod;
 import tradewar.api.IModInfo;
+import tradewar.utils.AbstractModInfo;
 import tradewar.utils.TWClassLoader;
 import tradewar.utils.log.Log;
 
@@ -21,7 +24,7 @@ public class ModManager {
 	
 	private static final String CONFIG_MODLIST = "mod-list";
 
-	private class ExtendedModInfo implements IStartableModInfo {
+	private class ExtendedModInfo extends AbstractModInfo implements IStartableModInfo, Serializable {
 		private static final long serialVersionUID = 5167038344751835449L;
 		
 		
@@ -31,7 +34,6 @@ public class ModManager {
 		public String version;
 		
 		public String modPath;
-		public String uid;
 
 		@Override
 		public String getName() {
@@ -61,11 +63,6 @@ public class ModManager {
 		
 		public String getModPath() {
 			return modPath;
-		}
-
-		@Override
-		public String getUID() {
-			return uid;
 		}
 	}
 
@@ -118,7 +115,7 @@ public class ModManager {
 			IStartableModInfo smodInfo = ((IStartableModInfo)modInfo);
 			IMod mod = smodInfo.instantiate();
 			
-			IConfig config = configManager.getConfig("mods/" + smodInfo.getUID());
+			IConfig config = configManager.getConfig("mods/" + smodInfo.getUId());
 			
 			mod.init(app, config);
 
@@ -147,7 +144,7 @@ public class ModManager {
 		}
 		
 		if(newList == null) {
-			throw new IOException("Failed to load mods from condig");
+			throw new IOException("Failed to load mods from config");
 		}
 		
 		modList = (ArrayList<ExtendedModInfo>)newList;
