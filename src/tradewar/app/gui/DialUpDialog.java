@@ -14,7 +14,6 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import tradewar.api.IListenServer;
 import tradewar.app.Application;
 import tradewar.app.network.ClientsideHandshakeProtocol;
 import tradewar.app.network.ConnectionBuilder;
@@ -39,7 +38,7 @@ public class DialUpDialog extends JDialog {
 	private Action cancelAction = new CancelAction();
 	private JLabel lblStatusLabel;
 	
-	public DialUpDialog(String addr, final String nickname, final int port) {
+	public DialUpDialog(final String nickname, String addr, final int port) {
 		
 		this.address = addr;
 		this.port = port;

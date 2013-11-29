@@ -4,6 +4,11 @@ package tradewar.app;
 import java.awt.EventQueue;
 import java.io.IOException;
 
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -17,10 +22,17 @@ import tradewar.api.ISceneFrame;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.gui.ApplicationWindow;
+import tradewar.app.gui.DialUpDialog;
 import tradewar.app.gui.ExceptionDialog;
 import tradewar.app.gui.LauncherScene;
+import tradewar.app.gui.ServerFrame;
+import tradewar.app.gui.ServerWindow;
+import tradewar.app.network.ClientsideHandshakeProtocol;
+import tradewar.app.network.ConnectionBuilder;
 import tradewar.app.network.ListenServer;
 import tradewar.app.network.QueryServer;
+import tradewar.utils.HashedPassword;
+import tradewar.utils.ProtocolProgressDialog;
 import tradewar.utils.Version;
 import tradewar.utils.log.Log;
 
@@ -40,6 +52,7 @@ public class Application implements IApp, Runnable {
 	private ConfigManager configManager;
 	private IDirectory rootDirectory;
 	private ApplicationWindow mainWin;
+	private ServerWindow serverWin;
 	
 	public Application(String[] args) {
 
@@ -127,15 +140,86 @@ public class Application implements IApp, Runnable {
 		lsrv.listen(true);
 		qsrv.setActive(true);
 		
+		ServerFrame serverFrame = new ServerFrame(ssparams.getServerName());
+		getServerWindow().addServerFrame(serverFrame);
+		getServerWindow().setVisible(true);
+		
+		server.start(serverFrame);
 	}
 
-	public void connectToServer() {
+	public void connectToServer(String nickname, String addr, int port) {
+
+	 	/*DialUpDialog dlg = new DialUpDialog(nickname, addr, port);
+		dlg.setVisible(true);*/
 		
+		ConnectionBuilder conbuilder = new ConnectionBuilder(addr, port);
+		
+		switch(new ProtocolProgressDialog("Connecting to " + addr + " on port " + port, conbuilder).showDlg()) {
+			case Aborted:
+				return;
+			case Failed:
+				ExceptionDialog.normalFail("Connection failed!", "Failed to connect to " + addr + ":" + port, conbuilder.getFailure(), log);
+				return;
+			case Completed:
+				break;
+			default:
+				throw new IllegalStateException();
+		}
+		
+		HashedPassword password = null;
+		String passwordInputTitle = "Enter password!";
+		
+		handshake_loop:
+		while(true) {
+			ClientsideHandshakeProtocol handshake = new ClientsideHandshakeProtocol(conbuilder.getConnection(), nickname, password);
+		
+			switch(new ProtocolProgressDialog("Login...", handshake).showDlg()) {
+			case Aborted:
+				return;
+			case Completed:
+				break handshake_loop;
+			case Failed:
+				if(handshake.isServesrFull()) {
+					JOptionPane.showMessageDialog(null, "Server is full!", "Login failed!", JOptionPane.ERROR_MESSAGE);
+					return;
+				} else if(handshake.isPasswordIncorrect()) {
+					JPanel panel = new JPanel();
+					panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+					JPasswordField pf = new JPasswordField();
+					panel.add(new JLabel("Server requires a password:"));
+					panel.add(pf);
+					int ok = JOptionPane.showConfirmDialog(null, panel, passwordInputTitle, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+					
+					passwordInputTitle = "Password was wrong!";
+					if (ok == JOptionPane.OK_OPTION) {
+						password = HashedPassword.fromClean(new String(pf.getPassword()));
+					}else{
+						return;
+					}
+				} else {
+					ExceptionDialog.normalFail("Login failed!", "Failed to login!", handshake.getFailure(), log);
+					return;
+				}
+				break;
+			default:
+				throw new IllegalStateException();
+			}
+			
+		}
 	}
 
 	@Override
 	public ILogStream getLogStream() {
 		return LOGSTREAM;
+	}
+	
+	private ServerWindow getServerWindow() {
+		if(serverWin == null) {
+			serverWin = new ServerWindow();
+			return serverWin;
+		}else{
+			return serverWin;
+		}
 	}
 	
 	

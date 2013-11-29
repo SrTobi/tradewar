@@ -1,9 +1,10 @@
-package tradewar.app.network;
+package tradewar.utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import tradewar.app.Application;
+import tradewar.app.network.IProtocolListener;
 import tradewar.utils.log.Log;
 
 public abstract class AbstractProtocol {
@@ -19,6 +20,7 @@ public abstract class AbstractProtocol {
 	protected Log log = new Log(Application.LOGSTREAM, "protocol");
 	private List<IProtocolListener> listeners = new ArrayList<>();
 	private ProtocolState state = ProtocolState.Ready;
+	private Exception failure;
 	
 	public void addProtocolListener(IProtocolListener listener) {
 		listeners.add(listener);
@@ -81,6 +83,17 @@ public abstract class AbstractProtocol {
 		return state;
 	}
 	
+	public Exception getFailure() {
+		return failure;
+	}
+	
+	public boolean isProgressIndeterminated() {
+		return true;
+	}
+	
+	public float getProgress() {
+		throw new IllegalAccessError("Protocol has no progress!");
+	}
 	
 	protected void notifyProtocolFail(Exception failure) {
 		for(IProtocolListener listener : listeners) {
@@ -111,6 +124,7 @@ public abstract class AbstractProtocol {
 			}
 		} catch(Exception e) {
 			if(!aborted()) {
+				failure = e;
 				state = ProtocolState.Failed;
 				notifyProtocolFail(e);
 			}

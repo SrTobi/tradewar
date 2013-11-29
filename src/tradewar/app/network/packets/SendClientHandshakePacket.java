@@ -17,7 +17,7 @@ public class SendClientHandshakePacket implements IPacket {
 	
 	public SendClientHandshakePacket(String nickname, HashedPassword hashedPassword) {
 		this.nickname = nickname;
-		this.hashedPassword = hashedPassword.getHashedPassword();
+		this.hashedPassword = hashedPassword == null ? null : hashedPassword.getHashedPassword();
 	}
 	
 	

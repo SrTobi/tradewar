@@ -3,7 +3,6 @@ package tradewar.app.gui;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 
 import javax.swing.AbstractAction;
@@ -25,22 +24,17 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import net.miginfocom.swing.MigLayout;
-import tradewar.api.IApp;
 import tradewar.api.IConfig;
-import tradewar.api.IMod;
 import tradewar.api.IModInfo;
 import tradewar.api.IScene;
-import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.AppException;
 import tradewar.app.Application;
 import tradewar.app.FormatPatterns;
 import tradewar.app.ModManager;
 import tradewar.app.network.IQueryResponseListener;
-import tradewar.app.network.ListenServer;
 import tradewar.app.network.QueryEmitter;
 import tradewar.app.network.QueryResponse;
-import tradewar.app.network.QueryServer;
 import tradewar.utils.ConfigBinding;
 import tradewar.utils.ConfigDocumentBinder;
 import tradewar.utils.FormChecker;
@@ -168,10 +162,6 @@ public class LauncherScene extends JPanel implements IScene {
 		add(btnDirectConnectButton, "cell 4 6,growx");
 		
 		JButton btnQuitButton = new JButton("Quit");
-		btnQuitButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-			}
-		});
 		btnQuitButton.setAction(quitAction);
 		add(btnQuitButton, "cell 0 7");
 		
@@ -333,8 +323,7 @@ public class LauncherScene extends JPanel implements IScene {
 			
 		 	QueryResponse r = gameOverviewModel.getRowData(row);
 		 	
-		 	DialUpDialog dlg = new DialUpDialog(r.getServerAddress(), nicknameInput.getText(), r.getServerPort());
-			dlg.setVisible(true);
+		 	app.connectToServer(nicknameInput.getText(), r.getServerAddress(), r.getServerPort());
 		}
 	}
 
@@ -372,8 +361,7 @@ public class LauncherScene extends JPanel implements IScene {
 					
 				}
 				
-			 	DialUpDialog dlg = new DialUpDialog(ip, nicknameInput.getText(), port);
-				dlg.setVisible(true);
+			 	app.connectToServer(nicknameInput.getText(), ip, port);
 			}
 		}
 	}

@@ -176,6 +176,10 @@ public class ConnectionSocket implements ISocket {
 		if(result != null) {
 			return result;
 		}
+		
+		if(!isConnected()) {
+			return null;
+		}
 			
 		try {
 			wait(timeout);

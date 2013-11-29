@@ -24,7 +24,7 @@ class ServerStartParams implements IServerStartParams {
 		if(enteredPassword == null || enteredPassword.isEmpty()) {
 			serverPassword = null;
 		} else {
-			serverPassword = HashedPassword.fromHash(enteredPassword);
+			serverPassword = HashedPassword.fromClean(enteredPassword);
 		}
 		maxPlayer = dlg.getMaxPlayer();
 		

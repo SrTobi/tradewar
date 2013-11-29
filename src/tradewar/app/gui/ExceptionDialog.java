@@ -70,14 +70,19 @@ public class ExceptionDialog extends JDialog {
 		getContentPane().add(stacktraceGroupPanel, "cell 0 2 3 1,grow");
 		stacktraceGroupPanel.setLayout(new BorderLayout(0, 0));
 
-		StringWriter writer = new StringWriter();
-		e.printStackTrace(new PrintWriter(writer));
+		String stackTrace = "unknwon!";
+		
+		if(e != null) {
+			StringWriter writer = new StringWriter();
+			e.printStackTrace(new PrintWriter(writer));
+			stackTrace = writer.toString();
+		}
 		
 		JTextPane txtStackTrace = new JTextPane();
 		txtStackTrace.setEditable(false);
 		txtStackTrace.setForeground(Color.RED);
 		txtStackTrace.setBackground(new Color(255, 255, 255));
-		txtStackTrace.setText(writer.toString());
+		txtStackTrace.setText(stackTrace);
 		stacktraceGroupPanel.add(new JScrollPane(txtStackTrace), BorderLayout.CENTER);
 		
 		if(hardcore) {

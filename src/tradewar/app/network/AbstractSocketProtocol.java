@@ -6,6 +6,7 @@ import java.util.concurrent.TimeoutException;
 import tradewar.api.IPacket;
 import tradewar.api.ISocket;
 import tradewar.app.Application;
+import tradewar.utils.AbstractProtocol;
 
 public abstract class AbstractSocketProtocol extends AbstractProtocol {
 

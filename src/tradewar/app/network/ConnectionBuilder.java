@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import tradewar.api.ISocket;
+import tradewar.utils.AbstractProtocol;
 
 public class ConnectionBuilder extends AbstractProtocol {
 	

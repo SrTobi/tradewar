@@ -38,13 +38,15 @@ public class ListenServer implements IListenServer, Runnable {
 			
 			boolean again = true;
 			boolean tooManyPlayer = false;
+			boolean timeout = true;
 			
 			while(again) {
 				try {
-					new ServersideHandshakeProtocol(socket, Application.APP_VERSION, ssparams, tooManyPlayer).executeProtocol();
+					new ServersideHandshakeProtocol(socket, Application.APP_VERSION, ssparams, tooManyPlayer, timeout).executeProtocol();
 					again = false;
 				} catch (SecurityException e) {
 					// password wrong!
+					timeout = false;
 				} catch (Exception e) {				
 					// Just throw him away!
 					log.excp(e);

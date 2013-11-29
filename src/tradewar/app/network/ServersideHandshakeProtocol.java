@@ -16,14 +16,16 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 	private boolean tooManyPlayer;
 	private IVersion serverVersion;
 	private IServerStartParams ssparams;
+	private boolean hasTimeout;
 	
-	public ServersideHandshakeProtocol(ISocket socket, IVersion serverVersion, IServerStartParams ssparams, boolean tooManyPlayer) {
+	public ServersideHandshakeProtocol(ISocket socket, IVersion serverVersion, IServerStartParams ssparams, boolean tooManyPlayer, boolean hasTimeout) {
 		super(socket);
 		
 		this.socket = socket;
 		this.serverVersion = serverVersion;
 		this.tooManyPlayer = tooManyPlayer;
 		this.ssparams = ssparams;
+		this.hasTimeout = hasTimeout;
 		
 		getDistributor().addPacketHandler(cliendHandshakeHandler);
 	}
@@ -34,9 +36,10 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 		@Override
 		public void onPacket(SendClientHandshakePacket packet) throws ProtocolException {
 
-			log.info("New player[" + packet.nickname + "] connected...");
+			log.info("Player[" + packet.nickname + "] tries to login...");
 
-			boolean passwordCorrect = ssparams.getHashedServerPassword() == null || Hasher.isEqual(ssparams.getHashedServerPassword(), packet.hashedPassword);
+			boolean passwordCorrect = ssparams.getHashedServerPassword() == null
+						|| (packet.hashedPassword != null && Hasher.isEqual(ssparams.getHashedServerPassword(), packet.hashedPassword));
 			
 			sendHandshakeResponse(passwordCorrect);
 			
@@ -68,6 +71,16 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 		
 		socket.send(packet);
 	}
+	
+	@Override
+	protected int getTimeout() {
+		if(hasTimeout) {
+			return super.getTimeout();
+		}else {
+			return 999999999;
+		}
+	}
+	
 	
 	@Override
 	protected boolean isProtocolCompleted() {
