@@ -14,6 +14,7 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 	private boolean accepted = false;
 	private ISocket socket;
 	private boolean tooManyPlayer;
+	private String playerName;
 	private IVersion serverVersion;
 	private IServerStartParams ssparams;
 	private boolean hasTimeout;
@@ -28,6 +29,10 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 		this.hasTimeout = hasTimeout;
 		
 		getDistributor().addPacketHandler(cliendHandshakeHandler);
+	}
+	
+	public String getPlayerName() {
+		return  playerName;
 	}
 
 	
@@ -58,6 +63,8 @@ public class ServersideHandshakeProtocol extends AbstractSocketProtocol {
 			if(!accepted) {
 				throw new ProtocolException("Player not accepted!");
 			}
+			
+			playerName = packet.nickname;
 		}
 		
 		@Override

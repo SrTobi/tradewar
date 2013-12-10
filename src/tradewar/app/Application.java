@@ -22,10 +22,10 @@ import tradewar.api.ISceneFrame;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.gui.ApplicationWindow;
-import tradewar.app.gui.DialUpDialog;
 import tradewar.app.gui.ExceptionDialog;
 import tradewar.app.gui.LauncherScene;
 import tradewar.app.gui.ServerFrame;
+import tradewar.app.gui.ServerTerminal;
 import tradewar.app.gui.ServerWindow;
 import tradewar.app.network.ClientsideHandshakeProtocol;
 import tradewar.app.network.ConnectionBuilder;
@@ -140,11 +140,15 @@ public class Application implements IApp, Runnable {
 		lsrv.listen(true);
 		qsrv.setActive(true);
 		
-		ServerFrame serverFrame = new ServerFrame(ssparams.getServerName());
+		
+		ServerTerminal terminal = new ServerTerminal(server);
+		ServerFrame serverFrame = new ServerFrame(ssparams.getServerName(), server);
+		serverFrame.setScene(terminal);
+		
 		getServerWindow().addServerFrame(serverFrame);
 		getServerWindow().setVisible(true);
 		
-		server.start(serverFrame);
+		server.start(terminal.getPrintStream(), serverFrame);
 	}
 
 	public void connectToServer(String nickname, String addr, int port) {

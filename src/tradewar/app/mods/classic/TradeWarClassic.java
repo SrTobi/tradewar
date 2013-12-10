@@ -27,15 +27,9 @@ public class TradeWarClassic implements IMod {
 		}
 	};
 	
-	
-	
-	
 	private TradeWarClassic() {
 		
 	}
-	
-	
-	
 
 	@Override
 	public String getName() {
@@ -54,7 +48,7 @@ public class TradeWarClassic implements IMod {
 
 	@Override
 	public void init(IApp app, IConfig config) {
-
+		
 	}
 
 	@Override
@@ -63,7 +57,7 @@ public class TradeWarClassic implements IMod {
 
 	@Override
 	public boolean hasDedicatedServer() {
-		return false;
+		return true;
 	}
 
 	@Override

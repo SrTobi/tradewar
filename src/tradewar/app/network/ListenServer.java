@@ -3,14 +3,16 @@ package tradewar.app.network;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.SynchronousQueue;
 
 import tradewar.api.IListenServer;
 import tradewar.api.ILogStream;
+import tradewar.api.IPacket;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.api.ISocket;
+import tradewar.api.ISocketListener;
 import tradewar.app.Application;
+import tradewar.app.FormatPatterns;
 import tradewar.utils.log.Log;
 
 public class ListenServer implements IListenServer, Runnable {
@@ -20,52 +22,11 @@ public class ListenServer implements IListenServer, Runnable {
 	private IServer server;
 	private ServerSocket listenSocket;
 	private boolean listening = false;
-	
-	private SynchronousQueue<Object> eventQueue;
-	
-	
-	private class Player implements Runnable {
-
-		ISocket socket;
-		
-		Player(Socket s) throws IOException {
-			this.socket = new ConnectionSocket(log.getStream(), s);
-			new Thread(this).start();
-		}
-		
-		@Override
-		public void run() {
-			
-			boolean again = true;
-			boolean tooManyPlayer = false;
-			boolean timeout = true;
-			
-			while(again) {
-				try {
-					new ServersideHandshakeProtocol(socket, Application.APP_VERSION, ssparams, tooManyPlayer, timeout).executeProtocol();
-					again = false;
-				} catch (SecurityException e) {
-					// password wrong!
-					timeout = false;
-				} catch (Exception e) {				
-					// Just throw him away!
-					log.excp(e);
-					return;
-				}
-			}
-			
-			while(true) {
-				socket.waitForPacket();
-			}
-		}
-	}
-	
-	
+	private int connectedCount = 0;
 	
 	public ListenServer(ILogStream logstream, IServerStartParams ssparams) throws IOException {
 		this.log = new Log(logstream, "listen-server");
 		this.ssparams = ssparams;
-		eventQueue = new SynchronousQueue<Object>();
 		
 		listenSocket = new ServerSocket(ssparams.getGameServerPort());
 	}
@@ -74,6 +35,7 @@ public class ListenServer implements IListenServer, Runnable {
 		this.server = server;
 	}
 	
+	@Override
 	public int getPlayerCount() {
 		if(server == null) {
 			return 0;
@@ -82,8 +44,18 @@ public class ListenServer implements IListenServer, Runnable {
 		return server.getPlayerCount();
 	}
 
+
+	@Override
+	public int getConnectedCount() {
+		return connectedCount;
+	}
+	
 	@Override
 	public void listen(boolean listening) {
+		
+		if(server == null) {
+			throw new NullPointerException("Server was not set!");
+		}
 
 		if(listening && !isListening()) {
 			
@@ -113,12 +85,81 @@ public class ListenServer implements IListenServer, Runnable {
 			try {
 				Socket s = listenSocket.accept();
 				
-				new Player(s);
+				doHandshake(s);
 			} catch (IOException e) {
 				log.err("Failed to accept socket!");
 				log.excp(e);
 			}
 		}
+	}
+	
+	private void doHandshake(Socket s) throws IOException {
+		final ISocket socket = new ConnectionSocket(log.getStream(), s);
+		++connectedCount;
 		
+		socket.addSocketListener(new ISocketListener() {
+			
+			@Override
+			public void onSend(IPacket packet) {}
+			
+			@Override
+			public void onReceive(IPacket packet) {}
+			
+			@Override
+			public void onError(IOException e) {}
+			
+			@Override
+			public void onDisconnect() {
+				--connectedCount;
+			}
+		});
+
+		final ServersideHandshakeProtocol handshake = createHandshakeProtocol(socket, true);
+		final IProtocolListener listener = new IProtocolListener() {
+			
+			ServersideHandshakeProtocol protocol = handshake;
+			
+			@Override
+			public void onProtocolFail(Exception failure) {
+				if(failure instanceof SecurityException) {
+					// Password was wrong... give user another chance!
+					protocol = createHandshakeProtocol(socket, false);
+					protocol.addProtocolListener(this);
+					protocol.invokeProtocol();
+				}else{
+					log.excp(failure);
+					socket.close();
+				}
+			}
+			
+			@Override
+			public void onProtocolCompleteness() {
+				// new player connected!
+				
+				String nickname = protocol.getPlayerName();
+
+				if(nickname == null || !nickname.matches(FormatPatterns.NICKNAME)) {
+					throw new IllegalArgumentException();
+				}
+				
+				log.info("New player[" + nickname + "] accepted!");
+				
+				// infom the server!
+				server.onNewPlayer(socket, nickname);
+			}
+			
+			@Override
+			public void onProtocolAbort() {
+				// Hmm should not be exectued!
+				assert false;
+			}
+		};
+		handshake.addProtocolListener(listener);
+		handshake.invokeProtocol();
+	}
+	
+	private ServersideHandshakeProtocol createHandshakeProtocol(ISocket s, boolean hasTimeout) {
+		boolean tooManyPlayer = connectedCount == ssparams.getMaxPlayer();
+		return new ServersideHandshakeProtocol(s, Application.APP_VERSION, ssparams, tooManyPlayer, hasTimeout);
 	}
 }
