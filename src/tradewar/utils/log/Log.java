@@ -1,6 +1,7 @@
 package tradewar.utils.log;
 
 import tradewar.api.ILogStream;
+import tradewar.app.Application;
 
 public class Log {
 	
@@ -8,6 +9,11 @@ public class Log {
 	
 	ILogStream stream;
 	String component;
+	
+
+	public Log(String component) {
+		this(Application.LOGSTREAM, component);
+	}
 	
 	
 	public Log(ILogStream stream) {

@@ -15,6 +15,8 @@ public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 	private boolean passwordIncorrect = false;
 	private boolean tooManyPlayer = false;
 	private boolean accepted = false;
+	private String mod_name = null;
+	private String mod_uid = null;
 	
 	
 	public ClientsideHandshakeProtocol(ISocket socket, String nickname, HashedPassword password) {
@@ -42,6 +44,14 @@ public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 		return tooManyPlayer;
 	}
 	
+	public String getModName() {
+		return mod_name;
+	}
+	
+	public String getModUid() {
+		return mod_uid;
+	}
+	
 	private IPacketHandler<SendServerHandshakePacket> appVersionHandler = new IPacketHandler<SendServerHandshakePacket>() {
 		
 		@Override
@@ -58,6 +68,8 @@ public class ClientsideHandshakeProtocol extends AbstractSocketProtocol {
 			}
 			
 			accepted = packet.accepted;
+			mod_name = packet.mod_name;
+			mod_uid = packet.mod_uid;
 			
 			if(!accepted) {
 				throw new ProtocolException("Handshake with server failed!");

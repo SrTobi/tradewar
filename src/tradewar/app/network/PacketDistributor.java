@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import tradewar.api.ILogStream;
 import tradewar.api.IPacket;
+import tradewar.app.Application;
 import tradewar.utils.log.Log;
 
 public class PacketDistributor {
@@ -24,6 +25,10 @@ public class PacketDistributor {
 	
 	private Log log;
 	private HashMap<Class<? extends IPacket>, PacketExecutor<?>> handlers;
+	
+	public PacketDistributor() {
+		this(Application.LOGSTREAM);
+	}
 	
 	public PacketDistributor(ILogStream logstream) {
 		this.log = new Log(logstream, "pack-distributor");

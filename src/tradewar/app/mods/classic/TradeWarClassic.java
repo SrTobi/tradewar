@@ -27,6 +27,8 @@ public class TradeWarClassic implements IMod {
 		}
 	};
 	
+	private IApp app;
+	
 	private TradeWarClassic() {
 		
 	}
@@ -48,7 +50,7 @@ public class TradeWarClassic implements IMod {
 
 	@Override
 	public void init(IApp app, IConfig config) {
-		
+		this.app = app;
 	}
 
 	@Override
@@ -67,12 +69,12 @@ public class TradeWarClassic implements IMod {
 
 	@Override
 	public IClient createClient() {
-		return null;
+		return new Client(app);
 	}
 
 	@Override
 	public IServer createDedicatedServer(IServerStartParams params, IListenServer listenServer, IQueryServer queryServer) {
-		return new Server();
+		return new LobbyServer();
 	}
 
 }

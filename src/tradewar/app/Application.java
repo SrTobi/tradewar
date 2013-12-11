@@ -13,6 +13,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import tradewar.api.IApp;
+import tradewar.api.IClient;
 import tradewar.api.IConfig;
 import tradewar.api.IDirectory;
 import tradewar.api.ILogStream;
@@ -21,6 +22,7 @@ import tradewar.api.IModInfo;
 import tradewar.api.ISceneFrame;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
+import tradewar.api.ISocket;
 import tradewar.app.gui.ApplicationWindow;
 import tradewar.app.gui.ExceptionDialog;
 import tradewar.app.gui.LauncherScene;
@@ -53,6 +55,7 @@ public class Application implements IApp, Runnable {
 	private IDirectory rootDirectory;
 	private ApplicationWindow mainWin;
 	private ServerWindow serverWin;
+	private IClient currentClient;
 	
 	public Application(String[] args) {
 
@@ -153,6 +156,11 @@ public class Application implements IApp, Runnable {
 
 	public void connectToServer(String nickname, String addr, int port) {
 
+		if(currentClient != null) {
+			currentClient.stop();
+			currentClient = null;
+		}
+		
 	 	/*DialUpDialog dlg = new DialUpDialog(nickname, addr, port);
 		dlg.setVisible(true);*/
 		
@@ -170,17 +178,23 @@ public class Application implements IApp, Runnable {
 				throw new IllegalStateException();
 		}
 		
+		ISocket connection = conbuilder.getConnection();
 		HashedPassword password = null;
 		String passwordInputTitle = "Enter password!";
+		String mod_name = null;
+		String mod_uid = null;
 		
 		handshake_loop:
 		while(true) {
-			ClientsideHandshakeProtocol handshake = new ClientsideHandshakeProtocol(conbuilder.getConnection(), nickname, password);
+			ClientsideHandshakeProtocol handshake = new ClientsideHandshakeProtocol(connection, nickname, password);
 		
 			switch(new ProtocolProgressDialog("Login...", handshake).showDlg()) {
 			case Aborted:
 				return;
 			case Completed:
+				mod_name = handshake.getModName();
+				mod_uid = handshake.getModUid();
+				
 				break handshake_loop;
 			case Failed:
 				if(handshake.isServesrFull()) {
@@ -208,8 +222,35 @@ public class Application implements IApp, Runnable {
 			default:
 				throw new IllegalStateException();
 			}
-			
 		}
+		
+		
+		if(mod_name == null || mod_uid == null) {
+			throw new IllegalAccessError();
+		}
+		
+		log.debug("Handshake done successfully!");
+		log.info("Server uses mod: " + mod_name);
+		
+		IModInfo modInfo = modManager.getModInfoByUId(mod_uid);
+		
+		if(modInfo == null) {
+			JOptionPane.showMessageDialog(null, "Mod not available!", "Can not start client!", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+
+		log.info("Start client!");
+		IMod mod = modManager.startMod(modInfo);
+		
+		currentClient = mod.createClient();
+		
+		if(currentClient == null) {
+			JOptionPane.showMessageDialog(null, "Failed to create the client!", "Can not start client!", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		currentClient.start(getMainSceneFrame(), nickname, connection);
 	}
 
 	@Override

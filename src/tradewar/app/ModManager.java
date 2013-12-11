@@ -109,6 +109,18 @@ public class ModManager {
 		return list;
 	}
 	
+	public IModInfo getModInfoByUId(String uid) {
+		IModInfo[] infos = getModInfos();
+		
+		for(IModInfo info : infos) {
+			if(info.getUId().equals(uid)) {
+				return info;
+			}
+		}
+		
+		return null;
+	}
+	
 	public IMod startMod(IModInfo modInfo) {
 		
 		if(modInfo instanceof IStartableModInfo) {

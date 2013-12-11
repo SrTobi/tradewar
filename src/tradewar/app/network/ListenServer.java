@@ -73,11 +73,6 @@ public class ListenServer implements IListenServer, Runnable {
 	}
 
 	@Override
-	public void poll() {
-
-	}
-
-	@Override
 	public void run() {
 		log.info("Start acceping on port " + ssparams.getGameServerPort());
 
