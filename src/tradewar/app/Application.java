@@ -206,6 +206,7 @@ public class Application implements IApp, Runnable {
 					JPasswordField pf = new JPasswordField();
 					panel.add(new JLabel("Server requires a password:"));
 					panel.add(pf);
+					panel.validate();
 					int ok = JOptionPane.showConfirmDialog(null, panel, passwordInputTitle, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 					
 					passwordInputTitle = "Password was wrong!";

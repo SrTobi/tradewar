@@ -98,7 +98,7 @@ public class LobbyServer implements IServer {
 		
 		output.println("Server created!");
 		try {
-			output.println("Local ipv4 is " + Inet4Address.getLocalHost().getCanonicalHostName());
+			output.println("Local ipv4 is " + Inet4Address.getLocalHost().getHostAddress());
 			output.println("Local ipv6 is " + Inet6Address.getLocalHost().getHostAddress());
 		} catch (UnknownHostException e) {
 			output.println("Local ip is unknown!");

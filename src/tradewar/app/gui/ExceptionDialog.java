@@ -57,9 +57,11 @@ public class ExceptionDialog extends JDialog {
 		    }
 		};
 		
-		Dimension iconDim = new Dimension(icon.getIconWidth(), icon.getIconHeight());
-		panel.setPreferredSize(iconDim);
-		panel.setMinimumSize(iconDim);
+		if(icon != null) {
+			Dimension iconDim = new Dimension(icon.getIconWidth(), icon.getIconHeight());
+			panel.setPreferredSize(iconDim);
+			panel.setMinimumSize(iconDim);
+		}
 		getContentPane().add(panel, "cell 0 0");
 		
 		JLabel lblInfoLabel = new JLabel(msg);
@@ -95,9 +97,9 @@ public class ExceptionDialog extends JDialog {
 		btnContinue.setAction(continueAction);
 		getContentPane().add(btnContinue, "cell 2 3");
 
-		pack();
 		btnContinue.requestFocusInWindow();
 		getRootPane().setDefaultButton(btnContinue);
+		pack();
 	}
 	
 	public static void normalFail(String title, String err_msg, Throwable e, Log log) {
@@ -106,6 +108,7 @@ public class ExceptionDialog extends JDialog {
 			log.err(err_msg);
 			log.excp(e);
 		}
+		dlg.validate();
 		dlg.setVisible(true);
 	}
 	

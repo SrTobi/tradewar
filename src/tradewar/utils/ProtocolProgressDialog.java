@@ -41,6 +41,7 @@ public class ProtocolProgressDialog extends ProcessDialog {
 	
 	public AbstractProtocol.ProtocolState showDlg() {
 		protocol.invokeProtocol();
+		pack();
 		setVisible(true);
 		
 		return protocol.getState();
