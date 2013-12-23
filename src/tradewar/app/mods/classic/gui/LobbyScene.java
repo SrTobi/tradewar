@@ -21,7 +21,9 @@ import tradewar.api.IPacket;
 import tradewar.api.IScene;
 import tradewar.api.ISocket;
 import tradewar.api.ISocketListener;
+import tradewar.app.mods.classic.Client;
 import tradewar.app.mods.classic.packets.SendChatMessagePacket;
+import tradewar.app.mods.classic.packets.SendGameInitPackage;
 import tradewar.app.network.IPacketHandler;
 import tradewar.app.network.PacketDistributor;
 import tradewar.utils.log.Log;
@@ -35,6 +37,7 @@ public class LobbyScene extends JPanel implements IScene {
 	private JTextArea outputField;
 	private String nickname;
 	private ISocket connection;
+	private Client client;
 	
 	
 	private Action sendChatMessageAction = new SendChatMessageAction();
@@ -88,17 +91,35 @@ public class LobbyScene extends JPanel implements IScene {
 			return SendChatMessagePacket.class;
 		}
 	};
+	
+	private IPacketHandler<SendGameInitPackage> gameinitHandler = new IPacketHandler<SendGameInitPackage>() {
+		
+		@Override
+		public void onPacket(SendGameInitPackage packet) throws Exception {
+			
+			client.startGame(packet.startMoney, packet.stockNames, packet.initialStockValues);
+		}
+		
+		@Override
+		public Class<SendGameInitPackage> getPacketClass() {
+			return SendGameInitPackage.class;
+		}
+	};
 
 	/**
 	 * Create the panel.
+	 * @param client 
 	 */
-	public LobbyScene(ILogStream stream, String nickname, ISocket connection) {
+	public LobbyScene(Client client, ILogStream stream, String nickname, ISocket connection) {
 		log = new Log(stream);
-		distributor = new PacketDistributor(stream);
-		distributor.addPacketHandler(messageHandler);
-		
+		this.client = client;
 		this.nickname = nickname;
 		this.connection = connection;
+		
+		distributor = new PacketDistributor(stream);
+		distributor.addPacketHandler(messageHandler);
+		distributor.addPacketHandler(gameinitHandler);
+		
 		
 		setup();
 	}

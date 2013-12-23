@@ -8,9 +8,10 @@ import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 
+import tradewar.api.IListenServer;
 import tradewar.api.IPacket;
+import tradewar.api.IQueryServer;
 import tradewar.api.ISceneFrame;
-import tradewar.api.IServer;
 import tradewar.api.ISocket;
 import tradewar.api.ISocketListener;
 import tradewar.app.mods.classic.packets.SendChatMessagePacket;
@@ -18,7 +19,7 @@ import tradewar.app.network.IPacketHandler;
 import tradewar.app.network.PacketDistributor;
 import tradewar.utils.log.Log;
 
-public class LobbyServer implements IServer {
+public class LobbyServerState implements IServerState {
 
 	private class Player {
 		
@@ -82,19 +83,19 @@ public class LobbyServer implements IServer {
 		};
 	}
 	
-	Log log = new Log("lobby-server");
-	PrintStream output;
-	List<Player> playerList = new LinkedList<>();
+	private Log log = new Log("lobby-server");
+	private PrintStream output;
+	private StateServer stateServer;
+	private IListenServer listenServer;
+	private IQueryServer queryServer;
+	private List<Player> playerList = new LinkedList<>();
 	
-	@Override
-	public int getPlayerCount() {
-		return 0;
-	}
-	
-	
-	@Override
-	public void start(PrintStream terminal, ISceneFrame frame) {
-		output = terminal;
+	public LobbyServerState(StateServer stateServer, IListenServer listenServer, IQueryServer queryServer, PrintStream output, ISceneFrame frame) {
+
+		this.stateServer = stateServer;
+		this.output = output;
+		this.listenServer = listenServer;
+		this.queryServer = queryServer;
 		
 		output.println("Server created!");
 		try {
@@ -104,6 +105,13 @@ public class LobbyServer implements IServer {
 			output.println("Local ip is unknown!");
 		}
 	}
+	
+	
+	@Override
+	public int getPlayerCount() {
+		return 0;
+	}
+	
 
 	@Override
 	public void stop() {
@@ -174,7 +182,24 @@ public class LobbyServer implements IServer {
 
 
 	private void startServer() {
+		output.println("Start server...");
+		listenServer.listen(false);
+		queryServer.setActive(false);
 		
+		int plynum = playerList.size();
+		
+		ISocket[] connections = new ISocket[plynum];
+		String[] nicknames = new String[plynum];
+		
+		int i = 0;
+		for(Player p : playerList) {
+			connections[i] = p.unbind();
+			nicknames[i] = p.getNickname();
+			
+			++i;
+		}
+		
+		stateServer.setState(new GameServerState(connections, nicknames));
 	}
 
 }

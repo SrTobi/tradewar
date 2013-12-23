@@ -215,24 +215,28 @@ public class ConnectionSocket implements ISocket {
 	}
 
 	private void notfiySend(IPacket packet) {
-		for(ISocketListener l : listeners)
+		for(ISocketListener l : getListeners())
 			l.onSend(packet);
 	}
 	
 	private void notfiyReceive(IPacket packet) {
-		for(ISocketListener l : listeners)
+		for(ISocketListener l : getListeners())
 			l.onReceive(packet);
 		
 	}
 	
 	private void notfiyError(IOException e) {
-		for(ISocketListener l : listeners)
+		for(ISocketListener l : getListeners())
 			l.onError(e);
 		
 	}
 	
 	private void notfiyDisconnect() {
-		for(ISocketListener l : listeners)
+		for(ISocketListener l : getListeners())
 			l.onDisconnect();		
+	}
+	
+	private synchronized ISocketListener[] getListeners() {
+		return listeners.toArray(new ISocketListener[listeners.size()]);
 	}
 }
