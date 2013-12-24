@@ -6,11 +6,11 @@ public class SendStockValuesPacket implements IPacket {
 
 	private static final long serialVersionUID = 3569430807365931885L;
 
-	public final int[] initialStockValues;
+	public final int[] stockValues;
 		
 	public SendStockValuesPacket(int[] stockValues) {
 
-		this.initialStockValues = stockValues;
+		this.stockValues = stockValues;
 	}
 		
 	@Override
@@ -21,6 +21,6 @@ public class SendStockValuesPacket implements IPacket {
 	@Override
 	public boolean check() {	
 		//TODO: check array values!
-		return initialStockValues != null;
+		return stockValues != null;
 	}
 }

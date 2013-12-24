@@ -12,6 +12,9 @@ import tradewar.api.ISceneFrame;
 import tradewar.api.IServer;
 import tradewar.api.IServerStartParams;
 import tradewar.app.IStartableModInfo;
+import tradewar.app.mods.classic.client.Client;
+import tradewar.app.mods.classic.server.LobbyServerState;
+import tradewar.app.mods.classic.server.StateServer;
 import tradewar.utils.AbstractInnerModInfo;
 
 public class TradeWarClassic implements IMod {

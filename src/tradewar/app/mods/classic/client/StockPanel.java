@@ -1,4 +1,4 @@
-package tradewar.app.mods.classic.gui;
+package tradewar.app.mods.classic.client;
 
 import javax.swing.JPanel;
 
@@ -13,7 +13,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 
-import tradewar.app.mods.classic.gui.EconomyScreen.SellBuyControl;
+import tradewar.app.mods.classic.client.EconomyScreen.SellBuyControl;
 
 public class StockPanel extends JPanel {
 

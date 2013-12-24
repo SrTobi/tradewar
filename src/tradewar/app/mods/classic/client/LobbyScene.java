@@ -1,4 +1,4 @@
-package tradewar.app.mods.classic.gui;
+package tradewar.app.mods.classic.client;
 
 import java.awt.Component;
 import java.awt.Font;
@@ -21,7 +21,6 @@ import tradewar.api.IPacket;
 import tradewar.api.IScene;
 import tradewar.api.ISocket;
 import tradewar.api.ISocketListener;
-import tradewar.app.mods.classic.Client;
 import tradewar.app.mods.classic.packets.SendChatMessagePacket;
 import tradewar.app.mods.classic.packets.SendGameInitPackage;
 import tradewar.app.network.IPacketHandler;
@@ -96,8 +95,15 @@ public class LobbyScene extends JPanel implements IScene {
 		
 		@Override
 		public void onPacket(SendGameInitPackage packet) throws Exception {
-			
-			client.startGame(packet.startMoney, packet.stockNames, packet.initialStockValues);
+
+			ClientModel model = new ClientModel(packet.startMoney,
+												packet.stockNames,
+												packet.initialStockValues,
+												packet.unitNames,
+												packet.initialUnitCosts,
+												packet.initialUnits,
+												packet.initialShieldLevel);
+			client.startGame(model);
 		}
 		
 		@Override

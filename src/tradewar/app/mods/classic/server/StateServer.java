@@ -1,4 +1,4 @@
-package tradewar.app.mods.classic;
+package tradewar.app.mods.classic.server;
 
 import tradewar.api.IServer;
 import tradewar.api.ISocket;

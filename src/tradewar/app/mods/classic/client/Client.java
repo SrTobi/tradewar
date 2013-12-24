@@ -1,11 +1,9 @@
-package tradewar.app.mods.classic;
+package tradewar.app.mods.classic.client;
 
 import tradewar.api.IApp;
 import tradewar.api.IClient;
 import tradewar.api.ISceneFrame;
 import tradewar.api.ISocket;
-import tradewar.app.mods.classic.gui.GameScene;
-import tradewar.app.mods.classic.gui.LobbyScene;
 
 public class Client implements IClient {
 
@@ -17,7 +15,7 @@ public class Client implements IClient {
 	private GameScene game;
 	
 	
-	Client(IApp app) {
+	public Client(IApp app) {
 		this.app = app;
 	}
 	
@@ -33,8 +31,10 @@ public class Client implements IClient {
 		frame.setScene(lobby);
 	}
 	
-	public void startGame(int money, String[] stockNames, int[] initialStockValues) {
-		game = new GameScene(this, connection, money, stockNames, initialStockValues);
+	public void startGame(ClientModel model) {
+		game = new GameScene(this, model);
+		
+		new ClientNetworkBinding(model, connection);
 		
 		frame.setScene(game);
 	}

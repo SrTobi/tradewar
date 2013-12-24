@@ -1,4 +1,4 @@
-package tradewar.app.mods.classic;
+package tradewar.app.mods.classic.server;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -153,7 +153,7 @@ public class GameServerState implements IServerState{
 				
 				Arrays.fill(units, 0);
 				
-				IPacket packet = new SendGameInitPackage(nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, units, unitCosts);
+				IPacket packet = new SendGameInitPackage(nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, units, unitCosts, 0);
 				
 				sendToAll(packet);
 			}
