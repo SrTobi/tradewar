@@ -102,7 +102,9 @@ public class LobbyScene extends JPanel implements IScene {
 												packet.unitNames,
 												packet.initialUnitCosts,
 												packet.initialUnits,
-												packet.initialShieldLevel);
+												packet.initialShieldLevel,
+												packet.playerId,
+												packet.players);
 			client.startGame(model);
 		}
 		

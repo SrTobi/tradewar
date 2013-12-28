@@ -19,6 +19,7 @@ import tradewar.utils.log.Log;
 public class GameServerState implements IServerState{
 
 	private static final int INITIAL_MONEY = 2000;
+	private static final int INITIAL_SHIELD_LVL = 1;
 	
 	private class Player {
 		
@@ -122,7 +123,7 @@ public class GameServerState implements IServerState{
 
 	@Override
 	public int getPlayerCount() {
-		return 0;
+		return players.length;
 	}
 
 	@Override
@@ -153,9 +154,10 @@ public class GameServerState implements IServerState{
 				
 				Arrays.fill(units, 0);
 				
-				IPacket packet = new SendGameInitPackage(nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, units, unitCosts, 0);
-				
-				sendToAll(packet);
+				for(int i = 0; i < players.length; ++i) {
+					IPacket packet = new SendGameInitPackage(i, nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, units, unitCosts, INITIAL_SHIELD_LVL);
+					players[i].send(packet);
+				}
 			}
 		});
 	}

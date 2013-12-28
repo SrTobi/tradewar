@@ -13,8 +13,6 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 
-import tradewar.app.mods.classic.client.EconomyScreen.SellBuyControl;
-
 public class StockPanel extends JPanel {
 
 	private static final long serialVersionUID = -4201699051555235602L;

@@ -18,8 +18,8 @@ public class GameScene extends JPanel implements IScene {
 	private Client client;
 	private ClientModel model;
 	
-	private EconomyScreen economyScreen;
-	
+	private EconomyView economyScreen;
+	private MilitaryView militaryView;
 	/**
 	 * Create the panel.
 	 */
@@ -35,11 +35,13 @@ public class GameScene extends JPanel implements IScene {
 		setLayout(new BorderLayout(0, 0));
 		
 		JSplitPane splitPane = new JSplitPane();
+		
+		economyScreen = new EconomyView(model);
+		militaryView = new MilitaryView(model);
+		splitPane.setRightComponent(militaryView);
+		splitPane.setLeftComponent(economyScreen);
 		splitPane.setResizeWeight(0.7);
 		add(splitPane, BorderLayout.CENTER);
-		
-		economyScreen = new EconomyScreen(model);
-		splitPane.setLeftComponent(economyScreen);
 	}
 
 	@Override

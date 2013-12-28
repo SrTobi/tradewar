@@ -17,11 +17,15 @@ public final class SendGameInitPackage implements IPacket {
 	public final int[] initialUnitCosts;
 	public final int initialShieldLevel;
 
+	public final int playerId;
+
 	
 	
 		
-	public SendGameInitPackage(String[] players, int startMoney, String[] stockNames, int[] initialStockValues, String[] unitNames, int[] initialUnits, int[] initialUnitCosts, int initialShieldLevel) {
+	public SendGameInitPackage(int playerId, String[] players, int startMoney, String[] stockNames, int[] initialStockValues, String[] unitNames,
+								int[] initialUnits, int[] initialUnitCosts, int initialShieldLevel) {
 
+		this.playerId = playerId;
 		this.players = players;
 		this.startMoney = startMoney;
 

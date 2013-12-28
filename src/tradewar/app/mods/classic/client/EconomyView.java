@@ -17,15 +17,10 @@ import javax.swing.BoxLayout;
 
 import tradewar.app.mods.classic.client.ClientModel.IClientModelListener;
 
-public class EconomyScreen extends JPanel {
+public class EconomyView extends JPanel {
 
 	private static final long serialVersionUID = 7529951709724948435L;
 	
-	public interface SellBuyControl {
-		public void buy();
-		public void sell();
-	}
-
 	private ClientModel model;
 	
 	private JLabel lblMoneyCount;
@@ -36,7 +31,7 @@ public class EconomyScreen extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public EconomyScreen(ClientModel model) {
+	public EconomyView(ClientModel model) {
 
 		this.model = model;
 		
@@ -126,13 +121,16 @@ public class EconomyScreen extends JPanel {
 			public void onPlayerLevelChange(int dlvl, int lvl) {
 				refreshCurrentLevelButton();
 			}
+
+			@Override
+			public void onUnitsChange(int idx, int du, int units) {}
 		};
 	}
 	
 	private void refreshMoneyLabel() {
 		lblMoneyCount.setText(model.getPlayerMoney() + "$");
 
-		btnLevelUp.setEnabled(model.canIncreaseLevel() && model.getPlayerMoney() >= model.getLevelUpCosts());
+		btnLevelUp.setEnabled(model.canUpgradePlayerLevel() && model.getPlayerMoney() >= model.getLevelUpCosts());
 	}
 	
 	private void refreshCurrentLevelButton() {
@@ -153,7 +151,7 @@ public class EconomyScreen extends JPanel {
 		builder.append(" SpT)");
 		
 		// print upgrade costs
-		if(model.canIncreaseLevel()) {
+		if(model.canUpgradePlayerLevel()) {
 			builder.append(" [+");
 			builder.append(model.getLevelUpBonus());
 			builder.append(' ');
