@@ -124,6 +124,12 @@ public class EconomyView extends JPanel {
 
 			@Override
 			public void onUnitsChange(int idx, int du, int units) {}
+
+			@Override
+			public void onEnemyStatusChange(int idx, int id, boolean attackChange, boolean attack, boolean defendChange, boolean defend,boolean alive) {}
+
+			@Override
+			public void onWar(int idx, boolean wasAttacking, int dlife, boolean won) {}
 		};
 	}
 	

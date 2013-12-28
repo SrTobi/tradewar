@@ -8,6 +8,7 @@ public final class SendGameInitPackage implements IPacket {
 
 	public final String[] players;
 	public final int startMoney;
+	public final int initialLife;
 	
 	public final String[] stockNames;
 	public final int[] initialStockValues;
@@ -22,10 +23,11 @@ public final class SendGameInitPackage implements IPacket {
 	
 	
 		
-	public SendGameInitPackage(int playerId, String[] players, int startMoney, String[] stockNames, int[] initialStockValues, String[] unitNames,
+	public SendGameInitPackage(int playerId, String[] players, int life, int startMoney, String[] stockNames, int[] initialStockValues, String[] unitNames,
 								int[] initialUnits, int[] initialUnitCosts, int initialShieldLevel) {
 
 		this.playerId = playerId;
+		this.initialLife = life;
 		this.players = players;
 		this.startMoney = startMoney;
 

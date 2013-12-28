@@ -1,6 +1,7 @@
 package tradewar.app.mods.classic.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ClientModel {
@@ -11,6 +12,8 @@ public class ClientModel {
 		void onStockAmountChange(int idx, int da, int amount);
 		void onPlayerLevelChange(int dlvl, int lvl);
 		void onUnitsChange(int idx, int du, int units);
+		void onEnemyStatusChange(int idx, int id, boolean attackChange, boolean attack, boolean defendChange, boolean defend, boolean alive);
+		void onWar(int idx, boolean wasAttacking, int dlife, boolean won);
 	}
 	
 	
@@ -35,6 +38,7 @@ public class ClientModel {
 	private int[] playerStockAmounts;
 	
 	// military
+	private int playerLife;
 	private int shieldLevel;
 	private final String[] unitNames;
 	private int[] unitCosts;
@@ -43,8 +47,11 @@ public class ClientModel {
 	private final int playerId;
 	private final int[] enemyIds;
 	private final String[] enemyNames;
+	private final boolean[] enemyAlive;
+	private final boolean[] enemysWeAttack;
+	private final boolean[] enemysWhoAttackUs;
 	
-	public ClientModel(int money, String[] stockNames, int[] stockValues, String[] unitNames, int[] unitCosts, int[] units, int shieldLevel, int playerId, String[] playersNames) {
+	public ClientModel(int money, String[] stockNames, int[] stockValues, int life, String[] unitNames, int[] unitCosts, int[] units, int shieldLevel, int playerId, String[] playersNames) {
 		if(stockNames == null || stockValues == null || unitNames == null || unitCosts == null || units == null || playersNames == null) {
 			throw new NullPointerException();
 		}
@@ -60,6 +67,7 @@ public class ClientModel {
 		this.playerLevelIdx = 0;
 		this.playerStockAmounts = new int[stockNames.length];
 		
+		this.playerLife = life;
 		this.shieldLevel = shieldLevel;
 		this.unitNames = unitNames;
 		this.unitCosts = unitCosts;
@@ -79,20 +87,31 @@ public class ClientModel {
 				--nextIdx;
 			}
 		}
+		enemyAlive = new boolean[enemyNames.length];
+		Arrays.fill(enemyAlive, true);
+		enemysWeAttack = new boolean[enemyNames.length];
+		Arrays.fill(enemysWeAttack, false);
+		enemysWhoAttackUs = new boolean[enemyNames.length];
+		Arrays.fill(enemysWhoAttackUs, false);
 	}
 
 	////////////////////////////////////////////// listener modifiers //////////////////////////////////////////////
-	public void addListener(IClientModelListener listener) {
+	public synchronized void addListener(IClientModelListener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeListener(IClientModelListener listener) {
+	public synchronized void removeListener(IClientModelListener listener) {
 		listeners.remove(listener);
 	}
 	
 	////////////////////////////////////////////// dynamic infos //////////////////////////////////////////////
 	public int getPlayerMoney() {
 		return playerMoney;
+	}
+
+
+	public int getPlayerLife() {
+		return playerLife;
 	}
 
 	public int[] getStockValues() {
@@ -190,6 +209,38 @@ public class ClientModel {
 		return (int) Math.pow(2, getShieldLevel()) * 5 + getShieldLevel() * 5000;
 	}
 
+	public boolean isEnemyAlive(int idx) {
+		if(idx < 0 || idx >= getEnemyCount()) {
+			throw new IllegalArgumentException();
+		}
+		
+		return enemyAlive[idx];
+	}
+	
+	public boolean isAttackedByUs(int idx) {
+		if(idx < 0 || idx >= getEnemyCount()) {
+			throw new IllegalArgumentException();
+		}
+		
+		return enemysWeAttack[idx];
+	}
+
+	public boolean isAttackingUs(int idx) {
+		if(idx < 0 || idx >= getEnemyCount()) {
+			throw new IllegalArgumentException();
+		}
+		
+		return enemysWhoAttackUs[idx];
+	}
+
+	public boolean hasWon() {
+		for(boolean alive : enemyAlive) {
+			if(alive)
+				return false;
+		}
+		return true;
+	}
+	
 	////////////////////////////////////////////// static infos //////////////////////////////////////////////
 	
 	public int getStockNum() {
@@ -215,13 +266,36 @@ public class ClientModel {
 	public int getPlayerId() {
 		return playerId;
 	}
+
+
+	public int getEnemyCount() {
+		return enemyNames.length;
+	}
 	
 	public String[] getEnemyNames() {
 		return enemyNames;
 	}
+	
+	public int getEnemyIndexByPlayerId(int id) {
+		for(int i = 0; i < enemyIds.length; ++i) {
+			if(enemyIds[i] == id) {
+				return i;
+			}
+		}
+		
+		return -1;
+	}
+	
+	public int getPlayerIdByEnemyIndex(int idx) {
+		if(idx < 0 || idx >= getEnemyCount()) {
+			throw new IllegalArgumentException();
+		}
+		
+		return enemyIds[idx];
+	}
 
 	////////////////////////////////////////////// modifiers //////////////////////////////////////////////
-	public void setMoney(int money) {
+	public synchronized void setMoney(int money) {
 		if(playerMoney != money) {
 			int dm = money - playerMoney;
 			playerMoney = money;
@@ -229,13 +303,13 @@ public class ClientModel {
 		}
 	}
 	
-	public int addMoney(int dm) {
+	public synchronized int addMoney(int dm) {
 		
 		setMoney(getPlayerMoney() + dm);
 		return playerMoney;
 	}
 
-	public void setStockValues(int[] stockValues) {
+	public synchronized void setStockValues(int[] stockValues) {
 		int[] oldValues = this.stockValues;
 		this.stockValues = stockValues;
 		for(int i = 0; i < getStockNum(); ++i) {
@@ -244,7 +318,7 @@ public class ClientModel {
 		}
 	}
 	
-	public int buyStocks(int idx) {
+	public synchronized int buyStocks(int idx) {
 		if(idx < 0 || idx >= getStockNum()) {
 			throw new IllegalArgumentException();
 		}
@@ -265,7 +339,7 @@ public class ClientModel {
 	}
 
 	
-	public int sellStocks(int idx) {
+	public synchronized int sellStocks(int idx) {
 		if(idx < 0 || idx >= getStockNum()) {
 			throw new IllegalArgumentException();
 		}
@@ -285,7 +359,7 @@ public class ClientModel {
 		return orderSize;
 	}
 
-	public boolean upgradePlayerLevel() {
+	public synchronized boolean upgradePlayerLevel() {
 		if(!canUpgradePlayerLevel()) {
 			throw new IllegalStateException();
 		}
@@ -303,7 +377,7 @@ public class ClientModel {
 		return true;
 	}
 	
-	public int buyUnits(int idx, int amount) {
+	public synchronized int buyUnits(int idx, int amount) {
 		if(idx >= units.length || amount < 0) {
 			throw new IllegalArgumentException();
 		}
@@ -326,6 +400,70 @@ public class ClientModel {
 		return amount;
 	}
 	
+	public synchronized boolean setAttacking(int idx, boolean attack) {
+		if(idx < 0 || idx >= getEnemyCount()) {
+			throw new IllegalArgumentException();
+		}
+
+		if(isAttackedByUs(idx) != attack && isEnemyAlive(idx)) {
+			enemysWeAttack[idx] = attack;
+			fireEnemyStatusUpdate(idx, true, false);
+		}
+		
+		return isAttackedByUs(idx);
+	}
+
+	public synchronized boolean setAttackedBy(int idx, boolean attack) {
+		if(idx < 0 || idx >= getEnemyCount()) {
+			throw new IllegalArgumentException();
+		}
+
+		if(isAttackingUs(idx) != attack && isEnemyAlive(idx)) {
+			enemysWhoAttackUs[idx] = attack;
+			fireEnemyStatusUpdate(idx, true, false);
+		}
+		
+		return isAttackedByUs(idx);
+	}
+	
+	public synchronized void setEnemyDeath(int id, String reason) {
+		
+		int idx = getEnemyIndexByPlayerId(id);
+		
+		if(idx != -1) {
+			enemyAlive[idx] = false;
+			
+			fireEnemyStatusUpdate(idx, false, false);
+		}
+	}
+	
+	public synchronized void applyWar(int enemyId, boolean wasAttacking, boolean won, int[] lostUnits, int loot, int lifeLost) {
+		
+		if(lostUnits == null) {
+			throw new NullPointerException();
+		}
+		
+		if(enemyId < 0 || enemyId > enemyNames.length || lostUnits.length != units.length || loot < 0 || lifeLost < 0) {
+			throw new IllegalArgumentException();
+		}
+		
+		for(int i = 0; i < units.length; ++i) {
+			units[i] -= Math.min(units[i], lostUnits[i]);
+		}
+		
+		if(!won) {
+			playerLife -= Math.min(playerLife, lifeLost);
+		}
+		
+		addMoney(won? loot : -loot);
+		for(int i = 0; i < lostUnits.length; ++i) {
+			int du = -lostUnits[i];
+			if(du < 0)
+				fireUnitsUpdate(i, du);
+		}
+		
+		fireWar(enemyId, wasAttacking, -lifeLost, won);
+	}
 	////////////////////////////////////////////// listeners //////////////////////////////////////////////
 	private void fireMoneyUpdate(int dm) {
 		for(IClientModelListener listener : listeners) {
@@ -356,4 +494,17 @@ public class ClientModel {
 			listener.onUnitsChange(idx, du, getUnits()[idx]);
 		}
 	}
+
+	private void fireEnemyStatusUpdate(int idx, boolean attackChange, boolean defendChange) {
+		for(IClientModelListener listener : listeners) {
+			listener.onEnemyStatusChange(idx, enemyIds[idx], attackChange, isAttackedByUs(idx), defendChange, isAttackingUs(idx), isEnemyAlive(idx));
+		}
+	}
+
+	private void fireWar(int idx, boolean wasAttacking, int dlife, boolean won) {
+		for(IClientModelListener listener : listeners) {
+			listener.onWar(idx, wasAttacking, dlife, won);
+		}
+	}
+
 }

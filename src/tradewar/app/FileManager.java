@@ -30,7 +30,7 @@ class FileManager {
 			throw new IllegalStateException("Can only create one file manager!");
 		}
 		
-		if(IsProgramPackedAsJar()) {
+		if(false /** IsProgramPackedAsJar() **/) {
 			log.info("Mounting the jar for internal fs.");
 			rootDirectory = null;
 		} else {

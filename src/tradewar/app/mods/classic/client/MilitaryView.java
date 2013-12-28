@@ -1,15 +1,24 @@
 package tradewar.app.mods.classic.client;
 
+import java.awt.Font;
+
 import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
-import javax.swing.table.DefaultTableModel;
 
 import tradewar.app.mods.classic.client.ClientModel.IClientModelListener;
 import net.miginfocom.swing.MigLayout;
+
 import javax.swing.JSlider;
+
+import java.awt.Dimension;
+
+import javax.swing.ScrollPaneConstants;
+import javax.swing.text.DefaultCaret;
 
 public class MilitaryView extends JPanel {
 	
@@ -17,12 +26,14 @@ public class MilitaryView extends JPanel {
 
 	private ClientModel model;
 	
+	private JLabel lblLive;
 	private JTable tblEnemyList;
 	private JPanel unitShopPanel;
-	private JTextPane txtOutput;
+	private JTextArea txtOutput;
 	
 	private UnitPanel[] unitPanels;
 	private JSlider unitShopSlider;
+	private JScrollPane scrollPane;
 
 	/**
 	 * Create the panel.
@@ -38,23 +49,18 @@ public class MilitaryView extends JPanel {
 	
 	private void setup() {
 		
-		setLayout(new MigLayout("", "[grow]", "[::40%][::40%,grow][][grow]"));
+		setLayout(new MigLayout("", "[grow,fill]", "[][::40%][::40%,grow][][grow,fill]"));
+		
+		lblLive = new JLabel("Life: " + model.getPlayerLife());
+		lblLive.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		add(lblLive, "cell 0 0");
 		
 		JScrollPane scrollPane_enemyList = new JScrollPane();
-		add(scrollPane_enemyList, "cell 0 0,growx,aligny top");
+		add(scrollPane_enemyList, "cell 0 1,growx,aligny top");
 		
 		tblEnemyList = new JTable();
-		tblEnemyList.setModel(new DefaultTableModel(
-			createTableContent(),
-			new String[] {"Enemy", "Attack", "Defend"}
-		) {
-			private static final long serialVersionUID = 1L;
-			
-			Class<?>[] columnTypes = new Class<?>[] {	String.class, Boolean.class, Boolean.class };
-			public Class<?> getColumnClass(int columnIndex) {
-				return columnTypes[columnIndex];
-			}
-		});
+		tblEnemyList.setPreferredScrollableViewportSize(new Dimension(450, 50));
+		tblEnemyList.setModel(new EnemySelectionModel(model));
 		tblEnemyList.getColumnModel().getColumn(1).setResizable(false);
 		tblEnemyList.getColumnModel().getColumn(1).setPreferredWidth(45);
 		tblEnemyList.getColumnModel().getColumn(2).setResizable(false);
@@ -74,7 +80,7 @@ public class MilitaryView extends JPanel {
 				unitShopPanel.add(p);
 			}
 		}
-		add(unitShopPanel, "cell 0 1,grow");
+		add(unitShopPanel, "cell 0 2,grow");
 		
 		unitShopSlider = new JSlider();
 		unitShopSlider.setPaintTicks(true);
@@ -85,22 +91,18 @@ public class MilitaryView extends JPanel {
 		unitShopSlider.setMinorTickSpacing(1);
 		unitShopSlider.setMinimum(1);
 		unitShopSlider.setMaximum(20);
-		add(unitShopSlider, "cell 0 2,growx");
+		add(unitShopSlider, "cell 0 3,growx");
 		
-		txtOutput = new JTextPane();
-		add(txtOutput, "cell 0 3,grow");
-	}
-	
-	private Object[][] createTableContent() {
-		String[] enemys = model.getEnemyNames();
+		scrollPane = new JScrollPane();
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+		txtOutput = new JTextArea();
+		scrollPane.setViewportView(txtOutput);
+
+		DefaultCaret caret = (DefaultCaret)txtOutput.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		add(scrollPane, "cell 0 4");
 		
-		Object[][] content = new Object[enemys.length][];
-		
-		for(int i = 0; i < enemys.length; ++i) {
-			content[i] = new Object[]{enemys[i], false, false};
-		}
-		
-		return content;
 	}
 	
 	private SellBuyControl createSellBuyControl(final int i) {
@@ -137,6 +139,29 @@ public class MilitaryView extends JPanel {
 			@Override
 			public void onUnitsChange(int idx, int du, int units) {
 				unitPanels[idx].setUnitCount(units);
+			}
+
+			@Override
+			public void onEnemyStatusChange(int idx, int id, boolean attackChange, boolean attack, boolean defendChange, boolean defend, boolean alive) {}
+
+			@Override
+			public void onWar(int idx, boolean wasAttacking, int dlife, boolean won) {
+				lblLive.setText("Life: " + model.getPlayerLife	());
+				
+				String enemyName = model.getEnemyNames()[idx];
+				if(wasAttacking) {
+					if(won) {
+						txtOutput.append("Won while attacking " + enemyName + " (" + dlife + " Life)!\n");
+					}else{
+						txtOutput.append("Lost while attacking " + enemyName + "!!!!!!!!\n");
+					}
+				}else{
+					if(won) {
+						txtOutput.append("Successfully defended against " + enemyName + "!\n");
+					}else{
+						txtOutput.append("Faild to defend against " + enemyName + "!!!!!!!!\n");
+					}
+				}
 			}
 		};
 	}

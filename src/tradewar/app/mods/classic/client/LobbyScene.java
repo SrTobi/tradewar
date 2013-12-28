@@ -99,6 +99,7 @@ public class LobbyScene extends JPanel implements IScene {
 			ClientModel model = new ClientModel(packet.startMoney,
 												packet.stockNames,
 												packet.initialStockValues,
+												packet.initialLife,
 												packet.unitNames,
 												packet.initialUnitCosts,
 												packet.initialUnits,

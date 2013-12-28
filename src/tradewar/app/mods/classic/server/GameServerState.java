@@ -2,7 +2,9 @@ package tradewar.app.mods.classic.server;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
@@ -12,8 +14,11 @@ import tradewar.api.IPacket;
 import tradewar.api.ISocket;
 import tradewar.api.ISocketListener;
 import tradewar.app.mods.classic.packets.SendArmyEnlargedPacket;
+import tradewar.app.mods.classic.packets.SendAttackingPackage;
 import tradewar.app.mods.classic.packets.SendGameInitPackage;
+import tradewar.app.mods.classic.packets.SendPlayerEliminatedPacket;
 import tradewar.app.mods.classic.packets.SendStockValuesPacket;
+import tradewar.app.mods.classic.packets.SendWarResultPacket;
 import tradewar.app.network.IPacketHandler;
 import tradewar.app.network.PacketDistributor;
 import tradewar.utils.log.Log;
@@ -21,12 +26,18 @@ import tradewar.utils.log.Log;
 public class GameServerState implements IServerState{
 
 	private static final int INITIAL_MONEY = 2000;
+	private static final int INITIAL_LIFE = 5000;
 	private static final int INITIAL_SHIELD_LVL = 1;
+	
+	private static final int INITIAL_PEACE_TIME =45000;
 	
 	private class Player {
 		
+		private final int playerId;
 		private String nickname;
+		private int playerLife;
 		private int[] units;
+		private Set<Integer> attacking = new HashSet<Integer>();
 		
 		private ISocket connection;
 		private PacketDistributor distributor = new PacketDistributor();
@@ -56,16 +67,23 @@ public class GameServerState implements IServerState{
 			public void onError(IOException e) {}
 			
 			@Override
-			public void onDisconnect() {}
+			public void onDisconnect() {
+				if(playerLife > 0) {
+					sendToAll(new SendPlayerEliminatedPacket(getPlayerId(), "connection lost"));
+				}
+			}
 		};
 		
-		Player(String nickname, ISocket connection, int[] units) {
+		Player(int playerId, String nickname, ISocket connection, int life, int[] units) {
+			this.playerLife = life;
+			this.playerId = playerId;
 			this.nickname = nickname;
-			this.units = units;
+			this.units = units.clone();
 			this.connection = connection;
 			
 			connection.addSocketListener(listener);
 			distributor.addPacketHandler(armyEnlargedHandler);
+			distributor.addPacketHandler(attackingHandler);
 		}
 		
 		public String getNickname() {
@@ -94,7 +112,6 @@ public class GameServerState implements IServerState{
 				}
 				
 				units[packet.unitIdx] += packet.unitAmount;
-				log.debug(unitNames[packet.unitIdx] + " +" + packet.unitAmount);
 			}
 			
 			@Override
@@ -102,6 +119,67 @@ public class GameServerState implements IServerState{
 				return SendArmyEnlargedPacket.class;
 			}
 		};
+		
+		private IPacketHandler<SendAttackingPackage> attackingHandler = new IPacketHandler<SendAttackingPackage>() {
+			
+			@Override
+			public void onPacket(SendAttackingPackage packet) throws Exception {
+				int enemyId = packet.playerId;
+				if(enemyId != playerId && enemyId < players.length) {
+					Player enemy = players[enemyId];
+					
+					if(enemy != null) {
+						boolean changed = false;
+						if(packet.attack) {
+							changed = attacking.add(enemyId);
+						}else{
+							changed = attacking.remove(enemyId);
+						}
+						
+						if(changed) {
+							enemy.send(new SendAttackingPackage(playerId, packet.attack));
+						}
+					}else{
+						attacking.remove(enemyId);
+					}
+				}
+			}
+			
+			@Override
+			public Class<SendAttackingPackage> getPacketClass() {
+				return SendAttackingPackage.class;
+			}
+		};
+
+		public void doAttacks() {
+			for(int i : attacking) {
+				Player p = players[i];
+				if(p != null) {
+					calculateWar(this, p);
+				}
+			}
+		}
+		
+		public void giveWarResults(int attackerId, int defenderId, int[] lostUnits, int loot, int lostLife, boolean won) {
+			for(int i = 0; i < units.length; ++i) {
+				units[i] -= Math.min(units[i], lostUnits[i]);
+			}
+			
+			if(!won) {
+				playerLife -= lostLife;
+			}
+			
+			send(new SendWarResultPacket(attackerId, defenderId, won, loot, lostLife, lostUnits));
+			
+			if(playerLife <= 0) {
+				sendToAll(new SendPlayerEliminatedPacket(getPlayerId(), "no more lifes"));
+				connection.close();
+			}
+		}
+
+		public int getPlayerId() {
+			return playerId;
+		}
 	}
 
 	private Executor executor = Executors.newFixedThreadPool(1);
@@ -134,7 +212,7 @@ public class GameServerState implements IServerState{
 		Arrays.fill(units, 0);
 		
 		for(int i = 0; i < plynum; ++i) {
-			players[i] = new Player(nicknames[i], connections[i], units);
+			players[i] = new Player(i, nicknames[i], connections[i], INITIAL_LIFE, units);
 		}
 		
 		
@@ -150,6 +228,7 @@ public class GameServerState implements IServerState{
 		
 		// start stock changing
 		refreshStockValues(300);
+		performWar(INITIAL_PEACE_TIME);
 	}
 
 	@Override
@@ -183,7 +262,7 @@ public class GameServerState implements IServerState{
 				
 				
 				for(int i = 0; i < players.length; ++i) {
-					IPacket packet = new SendGameInitPackage(i, nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, players[i].getUnits(), unitCosts, INITIAL_SHIELD_LVL);
+					IPacket packet = new SendGameInitPackage(i, nicknames, INITIAL_LIFE, INITIAL_MONEY, stockNames, stockValues, unitNames, players[i].getUnits(), unitCosts, INITIAL_SHIELD_LVL);
 					players[i].send(packet);
 				}
 			}
@@ -221,10 +300,52 @@ public class GameServerState implements IServerState{
 				
 				if( newStock[i] <= 0 )
 					newStock[i] = rand(20, 220);
-			}
+			}  
 		}
 		
 		return newStock;
+	}
+	
+	private void performWar(int milliseconds) {
+		execute(new Runnable() {
+			
+			@Override
+			public void run() {
+				for(int i = 0; i < players.length; ++i) {
+					Player p = players[i];
+					if(p != null) {
+						p.doAttacks();
+					}
+				}
+				
+				performWar(rand(1000, 4000));
+			}
+		}, milliseconds);
+	}
+	
+	private void calculateWar(Player attacker, Player defender) {
+		int attackerUnits = sum(attacker.getUnits());
+		int defenderUnits = sum(defender.getUnits());
+		
+		int[] attackerLost = new int[unitNames.length];
+		Arrays.fill(attackerLost, defenderUnits / 5);
+
+		int[] defenderLost = new int[unitNames.length];
+		Arrays.fill(defenderLost, attackerUnits / 6);
+	
+		boolean attackerWon = attackerUnits > defenderUnits;
+		int loot = rand(0, attackerWon? 50000 : 10000);
+		int lostLife = (!attackerWon)? 0 : rand(50, 500);
+		attacker.giveWarResults(attacker.getPlayerId(), defender.getPlayerId(), attackerLost, loot, lostLife, attackerWon);
+		defender.giveWarResults(attacker.getPlayerId(), defender.getPlayerId(), defenderLost, loot, lostLife, !attackerWon);
+	}
+	
+	private int sum(int[] a) {
+		int res = 0;
+		for(int i : a) {
+			res += i;
+		}
+		return res;
 	}
 	
 	private int rand(int from, int to) {

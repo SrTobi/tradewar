@@ -32,7 +32,7 @@ public class ApplicationWindow extends JFrame implements ISceneFrame {
 	
 	private void setup() {
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 680, 410);
 		setMinimumSize(new Dimension(500, 300));
 		setTitle("TradeWar");

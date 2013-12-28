@@ -73,8 +73,8 @@ public class LocalSocket extends AbstractSocket {
 	@Override
 	public synchronized void close() {
 		if(isConnected()) {
-			shutdown();
 			peer.shutdown();
+			shutdown();
 		}
 	}
 	
