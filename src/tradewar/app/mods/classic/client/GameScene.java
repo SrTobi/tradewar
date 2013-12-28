@@ -40,7 +40,7 @@ public class GameScene extends JPanel implements IScene {
 		militaryView = new MilitaryView(model);
 		splitPane.setRightComponent(militaryView);
 		splitPane.setLeftComponent(economyScreen);
-		splitPane.setResizeWeight(0.7);
+		//splitPane.setResizeWeight(0.7);
 		add(splitPane, BorderLayout.CENTER);
 	}
 

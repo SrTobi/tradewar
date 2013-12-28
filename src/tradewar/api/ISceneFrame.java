@@ -4,4 +4,5 @@ public interface ISceneFrame {
 
 	public void setScene(IScene scene);
 	public void removeScene(IScene scene);
+	public void pack();
 }

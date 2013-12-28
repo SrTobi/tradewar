@@ -58,4 +58,8 @@ public class ServerFrame implements ISceneFrame {
 		}
 	}
 
+	@Override
+	public void pack() {
+	}
+
 }

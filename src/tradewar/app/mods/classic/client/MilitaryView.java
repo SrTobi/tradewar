@@ -45,7 +45,7 @@ public class MilitaryView extends JPanel {
 		
 		tblEnemyList = new JTable();
 		tblEnemyList.setModel(new DefaultTableModel(
-			new Object[][] {createTableContent()},
+			createTableContent(),
 			new String[] {"Enemy", "Attack", "Defend"}
 		) {
 			private static final long serialVersionUID = 1L;

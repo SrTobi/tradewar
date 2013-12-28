@@ -11,8 +11,10 @@ import java.util.concurrent.Executors;
 import tradewar.api.IPacket;
 import tradewar.api.ISocket;
 import tradewar.api.ISocketListener;
+import tradewar.app.mods.classic.packets.SendArmyEnlargedPacket;
 import tradewar.app.mods.classic.packets.SendGameInitPackage;
 import tradewar.app.mods.classic.packets.SendStockValuesPacket;
+import tradewar.app.network.IPacketHandler;
 import tradewar.app.network.PacketDistributor;
 import tradewar.utils.log.Log;
 
@@ -24,6 +26,8 @@ public class GameServerState implements IServerState{
 	private class Player {
 		
 		private String nickname;
+		private int[] units;
+		
 		private ISocket connection;
 		private PacketDistributor distributor = new PacketDistributor();
 		
@@ -55,11 +59,13 @@ public class GameServerState implements IServerState{
 			public void onDisconnect() {}
 		};
 		
-		Player(String nickname, ISocket connection) {
+		Player(String nickname, ISocket connection, int[] units) {
 			this.nickname = nickname;
+			this.units = units;
 			this.connection = connection;
 			
 			connection.addSocketListener(listener);
+			distributor.addPacketHandler(armyEnlargedHandler);
 		}
 		
 		public String getNickname() {
@@ -74,7 +80,28 @@ public class GameServerState implements IServerState{
 			connection.removeSocketListener(listener);
 			return connection;
 		}
+
+		public int[] getUnits() {
+			return units;
+		}
 		
+		private IPacketHandler<SendArmyEnlargedPacket> armyEnlargedHandler = new IPacketHandler<SendArmyEnlargedPacket>() {
+			
+			@Override
+			public void onPacket(SendArmyEnlargedPacket packet) throws Exception {
+				if(packet.unitIdx >= units.length) {
+					throw new IllegalArgumentException();
+				}
+				
+				units[packet.unitIdx] += packet.unitAmount;
+				log.debug(unitNames[packet.unitIdx] + " +" + packet.unitAmount);
+			}
+			
+			@Override
+			public Class<SendArmyEnlargedPacket> getPacketClass() {
+				return SendArmyEnlargedPacket.class;
+			}
+		};
 	}
 
 	private Executor executor = Executors.newFixedThreadPool(1);
@@ -102,8 +129,12 @@ public class GameServerState implements IServerState{
 		
 		players = new Player[plynum];
 		
+
+		int[] units = new int[unitNames.length];
+		Arrays.fill(units, 0);
+		
 		for(int i = 0; i < plynum; ++i) {
-			players[i] = new Player(nicknames[i], connections[i]);
+			players[i] = new Player(nicknames[i], connections[i], units);
 		}
 		
 		
@@ -150,12 +181,9 @@ public class GameServerState implements IServerState{
 					nicknames[i] = players[i].getNickname();
 				}
 				
-				int[] units = new int[unitNames.length];
-				
-				Arrays.fill(units, 0);
 				
 				for(int i = 0; i < players.length; ++i) {
-					IPacket packet = new SendGameInitPackage(i, nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, units, unitCosts, INITIAL_SHIELD_LVL);
+					IPacket packet = new SendGameInitPackage(i, nicknames, INITIAL_MONEY, stockNames, stockValues, unitNames, players[i].getUnits(), unitCosts, INITIAL_SHIELD_LVL);
 					players[i].send(packet);
 				}
 			}

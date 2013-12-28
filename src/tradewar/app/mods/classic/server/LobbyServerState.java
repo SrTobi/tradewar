@@ -14,8 +14,10 @@ import tradewar.api.IQueryServer;
 import tradewar.api.ISceneFrame;
 import tradewar.api.ISocket;
 import tradewar.api.ISocketListener;
+import tradewar.app.mods.classic.ai.AbstractAi;
 import tradewar.app.mods.classic.packets.SendChatMessagePacket;
 import tradewar.app.network.IPacketHandler;
+import tradewar.app.network.LocalSocket;
 import tradewar.app.network.PacketDistributor;
 import tradewar.utils.log.Log;
 
@@ -109,7 +111,7 @@ public class LobbyServerState implements IServerState {
 	
 	@Override
 	public int getPlayerCount() {
-		return 0;
+		return playerList.size();
 	}
 	
 
@@ -171,6 +173,16 @@ public class LobbyServerState implements IServerState {
 			output.println("/kick");
 			break;
 			
+		case "/ai":
+			output.println("add ai...");
+			addAi(120, null);
+			break;
+			
+		case "/sunzi":
+			output.println("add SunZi...");
+			addAi(2000, "SunZi");
+			break;
+			
 		case "/start":
 			startServer();
 			break;
@@ -182,6 +194,17 @@ public class LobbyServerState implements IServerState {
 
 
 	private void startServer() {
+		if(getPlayerCount() == 0) {
+			output.println("No player connected!");
+			return;
+		}
+		
+		if(getPlayerCount() == 1) {
+			output.println("Only one player connected! Adding ai...");
+			addAi(120, null);
+		}
+		
+		
 		output.println("Start server...");
 		listenServer.listen(false);
 		queryServer.setActive(false);
@@ -201,5 +224,19 @@ public class LobbyServerState implements IServerState {
 		
 		stateServer.setState(new GameServerState(connections, nicknames));
 	}
+	
+	private static final String[] BOT_NICKNAME_LIST = {"Merkel", "Hollande", "Putin", "Obama", "Kim Jong Un", "Cicero", "Mao", "Cameron", "Stalin", "Hitler", "Lenin", "Ceasar", "Churchill"};
 
+	private void addAi(int turnsPerMinute, String nickname) {
+		
+		if(nickname == null) {
+			nickname = BOT_NICKNAME_LIST[(int) (Math.random() * BOT_NICKNAME_LIST.length)];
+		}
+		
+		ISocket[] ls = LocalSocket.createLocalSocketPair();
+		
+		AbstractAi ai = new AbstractAi(ls[0], nickname, turnsPerMinute);
+		ai.start();
+		onNewPlayer(ls[1], nickname);
+	}
 }

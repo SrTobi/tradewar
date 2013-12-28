@@ -2,9 +2,11 @@ package tradewar.api;
 
 import java.net.Socket;
 
+import javax.naming.OperationNotSupportedException;
+
 public interface ISocket {
 	
-	public Socket getUnderlyingSocket();
+	public Socket getUnderlyingSocket() throws OperationNotSupportedException;
 	public boolean isConnected();
 	
 	public void addSocketListener(ISocketListener listener);
